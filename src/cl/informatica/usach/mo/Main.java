@@ -1,5 +1,7 @@
 package cl.informatica.usach.mo;
 
+import cl.informatica.usach.mo.middleware.AllowedHttpMethods;
+import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpServer;
 
 import java.io.IOException;
@@ -17,7 +19,8 @@ public class Main {
             e.printStackTrace();
             return;
         }
-        server.createContext("/capture", new MyHttpsHandler());
+        HttpContext context = server.createContext("/capture", new MyHttpsHandler());
+        context.getFilters().add(new AllowedHttpMethods());
         server.setExecutor(null); // creates a default executor
         server.start();
         System.out.println("Servidor montado en localhost:8000/capture");
