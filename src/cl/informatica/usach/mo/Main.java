@@ -8,6 +8,10 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 
 public class Main {
 
@@ -19,10 +23,17 @@ public class Main {
             e.printStackTrace();
             return;
         }
-        HttpContext context = server.createContext("/capture", new MyHttpsHandler());
+        HttpContext context = server.createContext("/capture", new MyHttpsHandler(now()));
         context.getFilters().add(new AllowedHttpMethods());
         server.setExecutor(null); // creates a default executor
         server.start();
         System.out.println("Servidor montado en localhost:8000/capture");
+    }
+
+    public static String now(){
+        Calendar calendar = Calendar.getInstance();
+        Date date=calendar.getTime();
+        DateFormat dateFormat = new SimpleDateFormat(" dd_MM_YYYY_HH_mm_ss");
+        return dateFormat.format(date);
     }
 }
