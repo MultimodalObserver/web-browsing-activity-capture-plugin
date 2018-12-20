@@ -4,6 +4,9 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
 import java.io.*;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -14,14 +17,25 @@ public class MyHttpsHandler implements HttpHandler {
 
     public static final String OUTPUT_FILE_PATH = "output";
     public static final String OUTPUT_FILE_EXTENSION = ".json";
-    public String captureInitTimestamp;
+    private String captureInitTimestamp;
+    private Router router;
 
-    public MyHttpsHandler(String captureInitTimestamp){
+    public MyHttpsHandler(String captureInitTimestamp, Router router){
         this.captureInitTimestamp = captureInitTimestamp;
+        this.router = router;
     }
 
     @Override
     public void handle(HttpExchange exchange) {
+        URL url = null;
+        try {
+            url = exchange.getRequestURI().toURL();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+            return;
+        }
+        this.router.match(url.getPath());
+        /*
         InputStream inputStream = exchange.getRequestBody();
         //print(inputStream);
         writeCaptureFile(inputStream);
@@ -42,7 +56,7 @@ public class MyHttpsHandler implements HttpHandler {
             outputStream.close();
         } catch (IOException e) {
             e.printStackTrace();
-        }
+        }*/
     }
 
     private void print(InputStream inputStream){

@@ -23,11 +23,11 @@ public class Main {
             e.printStackTrace();
             return;
         }
-        HttpContext context = server.createContext("/capture", new MyHttpsHandler(now()));
+        HttpContext context = server.createContext("/", new MyHttpsHandler(now(), Router.getInstance()));
         context.getFilters().add(new AllowedHttpMethods());
         server.setExecutor(null); // creates a default executor
         server.start();
-        System.out.println("Servidor montado en localhost:8000/capture");
+        System.out.println("Servidor montado en localhost:8000/");
     }
 
     public static String now(){
