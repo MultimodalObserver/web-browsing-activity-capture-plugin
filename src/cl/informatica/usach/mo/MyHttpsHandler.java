@@ -15,100 +15,25 @@ import java.util.stream.Stream;
 
 public class MyHttpsHandler implements HttpHandler {
 
-    public static final String OUTPUT_FILE_PATH = "output";
-    public static final String OUTPUT_FILE_EXTENSION = ".json";
     private String captureInitTimestamp;
     private Router router;
 
-    public MyHttpsHandler(String captureInitTimestamp, Router router){
-        this.captureInitTimestamp = captureInitTimestamp;
+    public MyHttpsHandler(Router router){
+        this.captureInitTimestamp = now();
         this.router = router;
     }
 
     @Override
     public void handle(HttpExchange exchange) {
-        URL url = null;
-        try {
-            url = exchange.getRequestURI().toURL();
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-            return;
-        }
-        this.router.match(url.getPath());
-        /*
-        InputStream inputStream = exchange.getRequestBody();
-        //print(inputStream);
-        writeCaptureFile(inputStream);
-        String response = "Mensaje recibido";
-        exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
-        try {
-            exchange.sendResponseHeaders(200, response.length());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        OutputStream outputStream = exchange.getResponseBody();
-        try {
-            outputStream.write(response.getBytes());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        try {
-            outputStream.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }*/
+        String uri = exchange.getRequestURI().toString();
+        this.router.match(uri, exchange, this.captureInitTimestamp);
     }
 
-    private void print(InputStream inputStream){
-        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
-        Stream bodyStream =  bufferedReader.lines();
-        bodyStream.forEach(line -> {
-            System.out.println(line);
-        });
+    private static String now(){
+        Calendar calendar = Calendar.getInstance();
+        Date date=calendar.getTime();
+        DateFormat dateFormat = new SimpleDateFormat(" dd_MM_YYYY_HH_mm_ss");
+        return dateFormat.format(date);
     }
 
-    private void writeCaptureFile(InputStream inputStream){
-        String lineSeparator = System.getProperty("line.separator");
-        String realOutputPath = OUTPUT_FILE_PATH + "_" + captureInitTimestamp + OUTPUT_FILE_EXTENSION;
-        File outputFile = new File(realOutputPath);
-        FileWriter fileWriter = null;
-        BufferedWriter bufferedWriter = null;
-        try {
-            fileWriter = new FileWriter(outputFile, true);
-        }catch (IOException e) {
-            e.printStackTrace();
-            System.out.println("Error al crear wl writer");
-            return;
-        }
-        bufferedWriter = new BufferedWriter(fileWriter);
-        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
-        Stream bodyStream =  bufferedReader.lines();
-        Object[] jsonArray = bodyStream.toArray();
-        for (Object line : jsonArray){
-            try {
-                System.out.println("Voy a escribir: "+ String.valueOf(line));
-                bufferedWriter.write(String.valueOf(line) + lineSeparator);
-            } catch (IOException e) {
-                e.printStackTrace();
-                System.out.println("Error al escribir la linea:");
-                System.out.println(line);
-            }
-        }
-        try {
-            bufferedWriter.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.out.println("Error al cerrar el buffered writer");
-            return;
-        }
-        try {
-            fileWriter.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.out.println("Error al cerrar el file writer");
-            return;
-        }
-
-        System.out.println("Archivo de salida actualizado correctamente");
-    }
 }

@@ -23,17 +23,10 @@ public class Main {
             e.printStackTrace();
             return;
         }
-        HttpContext context = server.createContext("/", new MyHttpsHandler(now(), Router.getInstance()));
+        HttpContext context = server.createContext("/", new MyHttpsHandler(Router.getInstance()));
         context.getFilters().add(new AllowedHttpMethods());
         server.setExecutor(null); // creates a default executor
         server.start();
         System.out.println("Servidor montado en localhost:8000/");
-    }
-
-    public static String now(){
-        Calendar calendar = Calendar.getInstance();
-        Date date=calendar.getTime();
-        DateFormat dateFormat = new SimpleDateFormat(" dd_MM_YYYY_HH_mm_ss");
-        return dateFormat.format(date);
     }
 }

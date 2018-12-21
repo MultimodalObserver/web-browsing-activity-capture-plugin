@@ -1,6 +1,8 @@
 package cl.informatica.usach.mo;
 
+import cl.informatica.usach.mo.handlers.BaseHandler;
 import cl.informatica.usach.mo.interfaces.RouteHandle;
+import com.sun.net.httpserver.HttpExchange;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -19,10 +21,10 @@ public class Router {
 
     private Router(){
         this.routes = new HashMap<>();
-        this.routes.put("keystrokes", BASE_PACKAGE + "KeystrokeHandler");
-        this.routes.put("mouseUps", BASE_PACKAGE + "MouseUpsHandler");
-        this.routes.put("mouseMoves", BASE_PACKAGE + "MouseMovesHandler");
-        this.routes.put("mouseClicks", BASE_PACKAGE + "MouseClicksHandler");
+        this.routes.put("/keystrokes", BASE_PACKAGE + "KeystrokesHandler");
+        this.routes.put("/mouseUps", BASE_PACKAGE + "MouseUpsHandler");
+        this.routes.put("/mouseMoves", BASE_PACKAGE + "MouseMovesHandler");
+        this.routes.put("/mouseClicks", BASE_PACKAGE + "MouseClicksHandler");
     }
 
     public static Router getInstance(){
@@ -52,11 +54,12 @@ public class Router {
         this.routes.remove(path);
     }
 
-    public void match(String path){
+    public void match(String path, HttpExchange exchange, String captureInitTimestamp){
         if(path.isEmpty()){
             return;
         }
         else if(!this.routes.containsKey(path)){
+            new BaseHandler().sendResponse("Invalid route", 404, exchange);
             return;
         }
         Class handlerClass = null;
@@ -69,8 +72,20 @@ public class Router {
         if(!this.implementsRouteHandleInterface(handlerClass)){
             return;
         }
+        Object instance = null;
         try {
-            handlerClass.getMethod("handle", null).invoke(null,null);
+            instance = handlerClass.newInstance();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+            return;
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+            return;
+        }
+        try {
+            Class[] parameterTypes = {HttpExchange.class, String.class};
+            Method method = handlerClass.getMethod("handle", parameterTypes);
+            method.invoke(instance,exchange, captureInitTimestamp);
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         } catch (InvocationTargetException e) {
