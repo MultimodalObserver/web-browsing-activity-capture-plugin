@@ -1,15 +1,14 @@
 package cl.informatica.usach.mo.handlers;
 
-import cl.informatica.usach.mo.interfaces.RouteHandle;
 import com.sun.net.httpserver.HttpExchange;
 
 import java.io.IOException;
 import java.io.OutputStream;
 
-public class MouseClicksHandler extends BaseHandler implements RouteHandle {
+public class MouseClicksHandler extends BaseHandler{
 
-    @Override
-    public void handle(HttpExchange exchange, String captureInitTimestamp) {
+    /* Accedido por una ruta tipo POST, por tanto recibe el exchange y el timestamp de captura*/
+    public void store(HttpExchange exchange, String captureInitTimestamp) {
         this.captureInitTimestamp = captureInitTimestamp;
         this.outputFilePath = "mouseClicks";
         this.writeCaptureFile(exchange.getRequestBody());

@@ -3,15 +3,11 @@ package cl.informatica.usach.mo;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
-import java.io.*;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URL;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.stream.Stream;
 
 public class MyHttpsHandler implements HttpHandler {
 
@@ -25,8 +21,7 @@ public class MyHttpsHandler implements HttpHandler {
 
     @Override
     public void handle(HttpExchange exchange) {
-        String uri = exchange.getRequestURI().toString();
-        this.router.match(uri, exchange, this.captureInitTimestamp);
+        this.router.match(exchange, this.captureInitTimestamp);
     }
 
     private static String now(){
