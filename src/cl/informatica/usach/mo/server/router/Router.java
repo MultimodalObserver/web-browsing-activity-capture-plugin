@@ -1,4 +1,4 @@
-package cl.informatica.usach.mo;
+package cl.informatica.usach.mo.router;
 
 import cl.informatica.usach.mo.handlers.BaseHandler;
 import com.sun.net.httpserver.HttpExchange;

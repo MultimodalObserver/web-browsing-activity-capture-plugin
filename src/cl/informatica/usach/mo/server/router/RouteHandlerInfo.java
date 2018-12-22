@@ -1,4 +1,4 @@
-package cl.informatica.usach.mo;
+package cl.informatica.usach.mo.router;
 
 public class RouteHandlerInfo {
 
@@ -6,15 +6,6 @@ public class RouteHandlerInfo {
     private String handlerClassMethodName;
 
     public RouteHandlerInfo(String handlerClassName, String handlerClassMethodName) {
-
-        if(handlerClassName.isEmpty()){
-            System.out.println("RouteHandlerInfo handler classname must be present");
-            System.exit(1);
-        }
-        else if(handlerClassMethodName.isEmpty()){
-            System.out.println("RouteHandlerInfo handler method name must be present");
-            System.exit(1);
-        }
         this.handlerClassName = handlerClassName;
         this.handlerClassMethodName = handlerClassMethodName;
     }
