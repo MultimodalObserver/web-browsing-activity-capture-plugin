@@ -1,4 +1,4 @@
-package cl.informatica.usach.mo.router;
+package cl.informatica.usach.mo.server.router;
 
 public class RouteHandlerInfo {
 

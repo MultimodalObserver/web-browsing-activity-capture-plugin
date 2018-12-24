@@ -1,18 +1,27 @@
-package cl.informatica.usach.mo.handlers;
+package cl.informatica.usach.mo.server.handlers;
 
+import cl.informatica.usach.mo.server.middleware.Cors;
 import com.sun.net.httpserver.HttpExchange;
 
 import java.io.*;
-import java.net.URI;
 import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
+/* Clase que implementa funcionalidades básicas para los demás handlers, por medio de herencia, como lo son:
+
+    - Escritura de archivo de salida en base al contenido de una petición http valida de captura (POST).
+    - Envío de respuesta HTTP al cliente (INCLUYE SETEO DE HEADER CORS!!).
+    - Print de contenido recibido.
+    - Obtención de query params de una petición HTTP.
+
+    NO ES ABSTRACTA, YA QUE SE INSTANCIA Y UTILIZA PARA RESPONDER EN CASO DE ERROR DE RUTAS EN EL ROUTER.
+ */
 public class BaseHandler {
 
-    String outputFilePath = "output";
-    String captureInitTimestamp = "";
+    String outputFilePath = "output"; //Este atributo es sobreescrito en clases hijas
+    String captureInitTimestamp = ""; //Este atributo es sobreescrito en clases hijas
     private String outputFileExtension = ".json";
 
     void writeCaptureFile(InputStream inputStream){
@@ -69,7 +78,7 @@ public class BaseHandler {
     }
 
     public void sendResponse(String response,int status, HttpExchange exchange){
-        exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
+        exchange.getResponseHeaders().put("Access-Control-Allow-Origin", Cors.ALLOWED_ORIGINS);
         try {
             exchange.sendResponseHeaders(status, response.length());
         } catch (IOException e) {

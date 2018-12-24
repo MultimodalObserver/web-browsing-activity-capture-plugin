@@ -1,4 +1,4 @@
-package cl.informatica.usach.mo.handlers;
+package cl.informatica.usach.mo.server.handlers;
 
 import com.sun.net.httpserver.HttpExchange;
 

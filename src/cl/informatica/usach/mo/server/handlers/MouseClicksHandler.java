@@ -1,9 +1,6 @@
-package cl.informatica.usach.mo.handlers;
+package cl.informatica.usach.mo.server.handlers;
 
 import com.sun.net.httpserver.HttpExchange;
-
-import java.io.IOException;
-import java.io.OutputStream;
 
 public class MouseClicksHandler extends BaseHandler{
 

@@ -1,11 +1,16 @@
-package cl.informatica.usach.mo.router;
+package cl.informatica.usach.mo.server.router;
 
-import cl.informatica.usach.mo.handlers.BaseHandler;
+import cl.informatica.usach.mo.server.handlers.BaseHandler;
 import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,11 +23,11 @@ asociado a ese recurso mediante un mapa de llaves (Strings) y valores( mapa de t
 
  - Nombre completo de la clase que manejará la ruta (incluyendo el package).
  - Nombre del método de un objeto de la clase que será ejecutado. Los parametros que reciban estos metodos estan limitados
- por el tipo de peticion http que se realizo:
+ por el tipo de peticion http que se realizó:
 
     - Para POST, los parametros son el http exchange (que contiene toda la info del intercambio cliente/servidor) y un timestamp
     de inicio de la captura, ya que solo con POST recibimos datos capturados por la extension.
-    - Para GET u otros, el parametro es solo el exchange, ya que a partir de el se puede obtener toda la informacion.
+    - Para GET u otros, el parametro es solo el exchange, ya que a partir de el se puede obtener toda la informacion necesaria.
     En caso de querer obtener los query params de un GET, por herencia, en los handlers está disponible el metodo
     parseQueryString que entrega un mapa de llaves (String) y valores(String) con los parametros del request tipo GET.
 
@@ -41,12 +46,15 @@ Conceptualmente la estructura del router (el atributo routes en especifico) es u
   ],
   ....
 ]
+
+LO QUE PASA EN ESTA CLASE Y EN TODO LO QUE TIENE QUE VER CON EL PROCESAMIENTO DLE SERVIDOR, ES EN UN THREAD APARTE DEL
+DE LA FUNCION PRINCIPAL DEL PROGRAMA!!.
  */
 
-public class Router {
+public class Router implements HttpHandler {
 
     private static Router instance;
-    private static final String BASE_PACKAGE = "cl.informatica.usach.mo.";
+    private static final String BASE_PACKAGE = "cl.informatica.usach.mo.server.";
     private Map<String, Map<String, RouteHandlerInfo>> routes;
 
     private Router(){
@@ -65,12 +73,14 @@ public class Router {
 
     }
 
+
     public static Router getInstance(){
         if(instance == null){
             instance =  new  Router();
         }
         return instance;
     }
+
 
     public void addRoute(String path, String httpMethod, RouteHandlerInfo routeHandlerInfo){
         if(path.isEmpty()){
@@ -107,18 +117,20 @@ public class Router {
     Se valida que exista la ruta que se quiere mapear, y además se valida que la ruta este registrada
     con el método http del request que esta accediendo a esa ruta, ya que una ruta puede ser manejada accedida
     con distintos metodos HTTP.
-     */
+    */
 
-    public void match(HttpExchange exchange, String captureInitTimestamp){
+    @Override
+    public void handle(HttpExchange exchange){
         URI uri = exchange.getRequestURI();
         String path = uri.getPath();
         String httpMethod = exchange.getRequestMethod();
         if(!this.routes.containsKey(path)){
-            new BaseHandler().sendResponse("RouteHandlerInfo not defined in the server", 404, exchange);
+            String response = "Route with path: "+path+" not defined in the server";
+            new BaseHandler().sendResponse(response, 404, exchange);
             return;
         }
         else if(!this.routes.get(path).containsKey(httpMethod)){
-            String response = "RouteHandlerInfo defined in the server, but not with "+ httpMethod + "http method";
+            String response = "Route with path "+path+" defined in the server, but not with "+ httpMethod + "http method";
             new BaseHandler().sendResponse(response, 404, exchange);
             return;
         }
@@ -144,7 +156,7 @@ public class Router {
             if(httpMethod.equals("POST")){
                 Class[] parameterTypes = {HttpExchange.class, String.class};
                 Method method = handlerClass.getMethod(routeHandlerInfo.getHandlerClassMethodName(), parameterTypes);
-                method.invoke(instance,exchange, captureInitTimestamp);
+                method.invoke(instance,exchange, now());
             }
             else{
                 Method method = handlerClass.getMethod(routeHandlerInfo.getHandlerClassMethodName(), HttpExchange.class);
@@ -157,5 +169,12 @@ public class Router {
         } catch (NoSuchMethodException e) {
             e.printStackTrace();
         }
+    }
+
+    private String now(){
+        Calendar calendar = Calendar.getInstance();
+        Date date=calendar.getTime();
+        DateFormat dateFormat = new SimpleDateFormat(" dd_MM_YYYY_HH_mm_ss");
+        return dateFormat.format(date);
     }
 }
