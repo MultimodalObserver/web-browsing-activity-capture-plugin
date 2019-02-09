@@ -8,14 +8,14 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class ServerConfigurationView {
-    JFrame mainFrame;
-    final JButton saveButton;
-    final JTextField serverIpTextField;
-    final JTextField serverPortTextField;
-    final JLabel serverIpErrorLabel;
-    final JLabel serverPortErrorLabel;
-    final JLabel connectionStatusLabel;
-    final ServerController controller;
+    private JFrame mainFrame;
+    private JButton saveButton;
+    private JTextField serverIpTextField;
+    private JTextField serverPortTextField;
+    private JLabel serverIpErrorLabel;
+    private JLabel serverPortErrorLabel;
+    private JLabel connectionStatusLabel;
+    private ServerController controller;
 
     public ServerConfigurationView(ServerController controller){
         this.controller = controller;
@@ -45,20 +45,20 @@ public class ServerConfigurationView {
         this.saveButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                serverIpErrorLabel.setText("");
-                serverIpErrorLabel.setVisible(false);
-                serverPortErrorLabel.setText("");
-                serverPortErrorLabel.setVisible(false);
-                String ip = serverIpTextField.getText();
-                String port = serverPortTextField.getText();
+                ServerConfigurationView.this.serverIpErrorLabel.setText("");
+                ServerConfigurationView.this.serverIpErrorLabel.setVisible(false);
+                ServerConfigurationView.this.serverPortErrorLabel.setText("");
+                ServerConfigurationView.this.serverPortErrorLabel.setVisible(false);
+                String ip = ServerConfigurationView.this.serverIpTextField.getText();
+                String port = ServerConfigurationView.this.serverPortTextField.getText();
                 if(ip.isEmpty() || port.isEmpty()){
                     if(ip.isEmpty()){
-                        serverIpErrorLabel.setText("Server IP cannot be empty");
-                        serverIpErrorLabel.setVisible(true);
+                        ServerConfigurationView.this.serverIpErrorLabel.setText("Server IP cannot be empty");
+                        ServerConfigurationView.this.serverIpErrorLabel.setVisible(true);
                     }
                     if(port.isEmpty()){
-                        serverPortErrorLabel.setText("Server port cannot be empty");
-                        serverPortErrorLabel.setVisible(true);
+                        ServerConfigurationView.this.serverPortErrorLabel.setText("Server port cannot be empty");
+                        ServerConfigurationView.this.serverPortErrorLabel.setVisible(true);
                     }
                     return;
                 }
