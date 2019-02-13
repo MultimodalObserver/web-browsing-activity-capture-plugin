@@ -1,6 +1,6 @@
-package cl.informatica.usach.mo.views;
+package cl.informatica.usach.mo.server.views;
 
-import cl.informatica.usach.mo.controllers.ServerController;
+import cl.informatica.usach.mo.server.controllers.ServerController;
 
 import javax.swing.*;
 import java.awt.*;

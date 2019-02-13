@@ -1,20 +1,22 @@
 package cl.informatica.usach.mo.server.router;
 
-import cl.informatica.usach.mo.server.handlers.BaseHandler;
+import cl.informatica.usach.mo.server.controllers.ServerController;
+import cl.informatica.usach.mo.server.handlers.CaptureHandler;
+import cl.informatica.usach.mo.server.handlers.interfaces.CaptureEndpoint;
+import cl.informatica.usach.mo.server.handlers.interfaces.StartEndpoint;
+import cl.informatica.usach.mo.server.utilities.Response;
+import cl.informatica.usach.mo.utilities.DateHelper;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
+import java.io.FileOutputStream;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
-/* Clase Singleton que implementa funcionalidades de un router o enrutador. Su principal funcion es hacer un match entre
+/* Clase que implementa funcionalidades de un router o enrutador. Su principal funcion es hacer un match entre
 el recurso buscado en el servidor, mediante la URI consultada, especificamente el path y el manejador, controlador o handler
 asociado a ese recurso mediante un mapa de llaves (Strings) y valores( mapa de tipo string , objetos RouteHandlerInfo).
 
@@ -53,12 +55,23 @@ DE LA FUNCION PRINCIPAL DEL PROGRAMA!!.
 
 public class Router implements HttpHandler {
 
-    private static Router instance;
+    public static final int MOUNTED_STATUS = 0;
+    public static final int RUNNING_STATUS = 1;
+    public static final int PAUSED_STATUS = 2;
+    public static final int RESUMED_STATUS = 3;
+    public static final int STOPPED_STATUS = 4;
     private static final String BASE_PACKAGE = "cl.informatica.usach.mo.server.";
+    private static final String STORE_ACTION_NAME = "store";
+    private static final String CAPTURE_MILLISECONDS_ATTRIBUTE_NAME = "captureMilliseconds";
+    private static final String OUTPUT_FILEPATH_ATTRIBUTE_NAME = "outputFilePath";
+    private static final String PATH_SEPARATOR = System.getProperty("path.separator");
+    private static final String OUTPUT_FILE_EXTENSION = ".json";
     private Map<String, Map<String, RouteHandlerInfo>> routes;
+    private int status;
+    private ServerController serverController;
 
-    private Router(){
-
+    public Router(ServerController serverController){
+        this.serverController = serverController;
         this.routes = new HashMap<>();
 
         RouteHandlerInfo keystrokesPostRouteHandlerInfo = new RouteHandlerInfo( BASE_PACKAGE + "handlers.KeystrokesHandler", "store");
@@ -70,17 +83,7 @@ public class Router implements HttpHandler {
         addRoute("/mouseUps", "POST", mouseUpsPostRouteHandlerInfo);
         addRoute("/mouseMoves", "POST", mouseMovesPostRouteHandlerInfo);
         addRoute("/mouseClicks", "POST", mouseClicksPostRouteHandlerInfo);
-
     }
-
-
-    public static Router getInstance(){
-        if(instance == null){
-            instance =  new  Router();
-        }
-        return instance;
-    }
-
 
     public void addRoute(String path, String httpMethod, RouteHandlerInfo routeHandlerInfo){
         if(path.isEmpty()){
@@ -111,27 +114,50 @@ public class Router implements HttpHandler {
         this.routes.get(path).remove(httpMethod);
     }
 
+    public void setStatus(int status) {
+        /* AQUI HAY QUE SETEAR TIEMPOS DE LOS ESTADOS PAUSED Y RESUMED*/
+        this.status = status;
+    }
+
     /* Principal metodo de esta clase, en donde mediante relfexion, se invoca el metodo de la clase
-    registrados en las rutas.
+    registrado en las rutas.
 
     Se valida que exista la ruta que se quiere mapear, y además se valida que la ruta este registrada
     con el método http del request que esta accediendo a esa ruta, ya que una ruta puede ser manejada accedida
     con distintos metodos HTTP.
+
+    Si el handler (clase) a instanciar es una instancia de la interfaz CaptureENdpoint, se le pasa todo lo necesario para poder
+    realizar la captura del tipo de dato en cuestión. Además, se crea el archivo de captura referente a ese endpoint, en caso
+    de que no se haya creado.
+
+    Sino, si el handler a instanciar es una instancia de la interfaz StartEndpoint, se le pasa todo lo necesario para dar inicio
+    real al proceso de captura, ya que esto es determinado por la extensión y no por el plugin de MO.
+
     */
 
     @Override
     public void handle(HttpExchange exchange){
+        if(this.status == MOUNTED_STATUS){
+            String response = "Server mounted, waiting for the extension capture init";
+            Response.sendResponse(response, 404, exchange);
+            return;
+        }
+        if(this.status == PAUSED_STATUS){
+            String response = "Server paused";
+            Response.sendResponse(response, 404, exchange);
+            return;
+        }
         URI uri = exchange.getRequestURI();
         String path = uri.getPath();
         String httpMethod = exchange.getRequestMethod();
         if(!this.routes.containsKey(path)){
             String response = "Route with path: "+path+" not defined in the server";
-            new BaseHandler().sendResponse(response, 404, exchange);
+            Response.sendResponse(response, 404, exchange);
             return;
         }
         else if(!this.routes.get(path).containsKey(httpMethod)){
             String response = "Route with path "+path+" defined in the server, but not with "+ httpMethod + "http method";
-            new BaseHandler().sendResponse(response, 404, exchange);
+            Response.sendResponse(response, 404, exchange);
             return;
         }
         RouteHandlerInfo routeHandlerInfo = this.routes.get(path).get(httpMethod);
@@ -142,39 +168,33 @@ public class Router implements HttpHandler {
             e.printStackTrace();
             return;
         }
+        String handlerClassMethodName = routeHandlerInfo.getHandlerClassMethodName();
         Object instance = null;
+        Constructor classConstructor = null;
         try {
-            instance = handlerClass.newInstance();
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-            return;
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-            return;
-        }
-        try {
-            if(httpMethod.equals("POST")){
-                Class[] parameterTypes = {HttpExchange.class, String.class};
-                Method method = handlerClass.getMethod(routeHandlerInfo.getHandlerClassMethodName(), parameterTypes);
-                method.invoke(instance,exchange, now());
+            classConstructor = handlerClass.getConstructor();
+            instance= classConstructor.newInstance();
+            if(instance instanceof CaptureEndpoint){
+                Method method = handlerClass.getMethod(handlerClassMethodName, HttpExchange.class, FileOutputStream.class,
+                        long.class);
+                FileOutputStream fileOutputStream = this.serverController.createOrGetOutputFile(path);
+                if(fileOutputStream == null){
+                    System.out.println("Error al tratar de crear el archivo de:" + path);
+                    return;
+                }
+                /* Ver el tema de milisegundos*/
+                long captureMilliseconds = DateHelper.nowMilliseconds();
+                method.invoke(instance,exchange, fileOutputStream, captureMilliseconds);
             }
-            else{
-                Method method = handlerClass.getMethod(routeHandlerInfo.getHandlerClassMethodName(), HttpExchange.class);
-                method.invoke(instance,exchange);
+            else if(instance instanceof StartEndpoint){
+                Method method = handlerClass.getMethod(handlerClassMethodName, HttpExchange.class, ServerController.class);
+                method.invoke(instance,exchange, this.serverController);
             }
-        } catch (IllegalAccessException e) {
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
             e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
+            /* Loggear Error*/
+            return;
         }
     }
 
-    private String now(){
-        Calendar calendar = Calendar.getInstance();
-        Date date=calendar.getTime();
-        DateFormat dateFormat = new SimpleDateFormat(" dd_MM_YYYY_HH_mm_ss");
-        return dateFormat.format(date);
-    }
 }

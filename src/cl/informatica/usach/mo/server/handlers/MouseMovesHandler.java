@@ -1,15 +1,17 @@
 package cl.informatica.usach.mo.server.handlers;
 
+import cl.informatica.usach.mo.server.handlers.interfaces.CaptureEndpoint;
+import cl.informatica.usach.mo.server.utilities.Response;
 import com.sun.net.httpserver.HttpExchange;
 
-public class MouseMovesHandler extends BaseHandler {
+import java.io.FileOutputStream;
 
-    /* Accedido por una ruta tipo POST, por tanto recibe el exchange y el timestamp de captura*/
-    public void store(HttpExchange exchange, String captureInitTimestamp) {
-        this.captureInitTimestamp = captureInitTimestamp;
-        this.outputFilePath = "mouseMoves";
-        this.writeCaptureFile(exchange.getRequestBody());
+public class MouseMovesHandler extends CaptureHandler implements CaptureEndpoint {
+
+    @Override
+    public void store(HttpExchange exchange, FileOutputStream fileOutputStream, long captureMilliseconds) {
+        this.writeCaptureFile(exchange.getRequestBody(), fileOutputStream, captureMilliseconds);
         String response = "Mensaje recibido";
-        this.sendResponse(response,200, exchange);
+        Response.sendResponse(response,200, exchange);
     }
 }
