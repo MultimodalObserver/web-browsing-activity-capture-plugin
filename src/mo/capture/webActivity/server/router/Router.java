@@ -1,10 +1,8 @@
 package mo.capture.webActivity.server.router;
 
-import mo.communication.streaming.capture.PluginCaptureListener;
-import mo.capture.webActivity.plugin.WebBrowsingActivityRecorder;
+import mo.capture.webActivity.server.handler.behavior.LifecycleEndpoint;
 import mo.capture.webActivity.server.controller.ServerController;
 import mo.capture.webActivity.server.handler.behavior.CaptureEndpoint;
-import mo.capture.webActivity.server.handler.behavior.StartEndpoint;
 import mo.capture.webActivity.server.utilities.Response;
 import mo.capture.webActivity.util.DateHelper;
 import com.sun.net.httpserver.HttpExchange;
@@ -78,12 +76,14 @@ public class Router implements HttpHandler {
         RouteHandlerInfo mouseMovesPostRouteHandlerInfo = new RouteHandlerInfo( BASE_PACKAGE + "handler.MouseMovesHandler", "store");
         RouteHandlerInfo mouseClicksPostRouteHandlerInfo = new RouteHandlerInfo( BASE_PACKAGE + "handler.MouseClicksHandler", "store");
         RouteHandlerInfo startPostHandlerInfo = new RouteHandlerInfo(BASE_PACKAGE + "handler.StartHandler", "start");
+        RouteHandlerInfo stopPostHandlerInfo = new RouteHandlerInfo(BASE_PACKAGE + "handler.StopHandler", "stop");
 
         this.addRoute("/keystrokes","POST", keystrokesPostRouteHandlerInfo);
         this.addRoute("/mouseUps", "POST", mouseUpsPostRouteHandlerInfo);
         this.addRoute("/mouseMoves", "POST", mouseMovesPostRouteHandlerInfo);
         this.addRoute("/mouseClicks", "POST", mouseClicksPostRouteHandlerInfo);
         this.addRoute("/start", "POST", startPostHandlerInfo);
+        this.addRoute("/stop", "POST", stopPostHandlerInfo);
     }
 
     public void addRoute(String path, String httpMethod, RouteHandlerInfo routeHandlerInfo){
@@ -146,9 +146,6 @@ public class Router implements HttpHandler {
 
     @Override
     public void handle(HttpExchange exchange){
-        System.out.println(this.status);
-        System.out.println("Peticion recibida");
-        System.out.println(exchange.getRequestURI());
         if(this.status == PAUSED_STATUS){
             String response = "Server paused";
             Response.sendResponse(response, 404, exchange);
@@ -172,7 +169,6 @@ public class Router implements HttpHandler {
             Response.sendResponse(response, 404, exchange);
             return;
         }
-        System.out.println("PASE REGLAS DE RUTAS");
         RouteHandlerInfo routeHandlerInfo = this.routes.get(path).get(httpMethod);
         Class handlerClass = null;
         try {
@@ -182,7 +178,6 @@ public class Router implements HttpHandler {
             Response.sendResponse("handler class not found for the " + path + " route", 500, exchange);
             return;
         }
-        System.out.println("ENcontre clase");
         String handlerClassMethodName = routeHandlerInfo.getHandlerClassMethodName();
         Object instance = null;
         Constructor classConstructor = null;
@@ -192,26 +187,21 @@ public class Router implements HttpHandler {
             if(instance instanceof CaptureEndpoint){
                 Method method = handlerClass.getMethod(handlerClassMethodName, HttpExchange.class, FileOutputStream.class,
                         long.class);
-            System.out.println("AQUI");
                 FileOutputStream fileOutputStream = ServerController.getInstance().createOrGetOutputFile(path);
                 long now = DateHelper.nowMilliseconds();
                 long resumedCaptureTime = this.pauseTime + (now - this.resumeTime);
                 long captureMilliseconds = this.resumeTime == 0 ? now : resumedCaptureTime;
-                System.out.println("HERE");
                 method.invoke(instance,exchange, fileOutputStream, captureMilliseconds);
-                System.out.println("PASE");
             }
-            else if(instance instanceof StartEndpoint){
+            else if(instance instanceof LifecycleEndpoint){
                 Method method = handlerClass.getMethod(handlerClassMethodName, HttpExchange.class);
                 method.invoke(instance,exchange);
             }
+
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
             /* Loggear Error*/
-            System.out.println(e.getMessage());
             Response.sendResponse("Error on the " + path + " handler", 500, exchange);
         } catch (IOException e) {
-            System.out.println(e.getMessage());
-            System.out.println("Error al tratar de crear el archivo de:" + path);
             Response.sendResponse("Error while trying to store data for the" + path + " handler", 500, exchange);
         }
     }

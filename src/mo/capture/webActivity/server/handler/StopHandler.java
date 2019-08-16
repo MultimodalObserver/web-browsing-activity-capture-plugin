@@ -9,9 +9,8 @@ public class StopHandler implements StopEndpoint {
 
     @Override
     public void stop(HttpExchange httpExchange) {
-        ServerController.getInstance().stopServer(0, false);
-        /* como puedo detener la ejecucion del plugin con MO ??*/
-        String response = "server stopped";
+        ServerController.getInstance().stopCapture();
+        String response = "Capture stopped";
         Response.sendResponse(response, 200, httpExchange);
     }
 }

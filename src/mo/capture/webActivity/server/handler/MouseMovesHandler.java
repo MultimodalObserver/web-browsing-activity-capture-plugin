@@ -12,7 +12,6 @@ import java.util.List;
 public class MouseMovesHandler extends CaptureHandler implements CaptureEndpoint {
     @Override
     public void store(HttpExchange exchange, FileOutputStream fileOutputStream, long captureMilliseconds) {
-        System.out.println("llegue al handler");
         this.writeAndSendData(exchange.getRequestBody(), fileOutputStream, captureMilliseconds);
         String response = "Mensaje recibido";
         Response.sendResponse(response,200, exchange);

@@ -120,36 +120,23 @@ public class ServerController {
     }
 
     public FileOutputStream createOrGetOutputFile(String fileName) throws IOException {
-        System.out.println("LLEGUE");
         String realFileName = this.reportDate + "_" + this.recorder.getWebBrowsingActivityConfiguration().getId() + fileName.replace("/", "")
                 + OUTPUT_FILE_EXTENSION;
-        System.out.println("LLEGUE1");
         /* Creamos un subdirectorio de nombre report date*/
         String parentPath = this.recorder.getStageFolder().getAbsolutePath();
-        System.out.println("LLEGUE2");
         this.reportFolder = new File(parentPath + System.getProperty("file.separator") + reportDate +
                 "_" + MAP_FILE_NAME);
-        System.out.println("LLEGUE3");
         this.reportFolder.mkdir();
-        /*if(!folderCreated){
-            LOGGER.log(Level.SEVERE, "An error occurred while trying to create the: " + reportDate + " folder");
-            return null;
-        }
-        */
-        System.out.println(realFileName);
-        System.out.println(parentPath);
         File outputFile = new File(this.reportFolder, realFileName);
         if(this.outputFilesMap.containsKey(fileName)){
             return (FileOutputStream) this.outputFilesMap.get(fileName).get(FILE_OUTPUT_STREAM_KEY);
         }
-        System.out.println("WEBEO");
         outputFile.createNewFile();
         FileOutputStream fileOutputStream = new FileOutputStream(outputFile);
         Map<String, Object> outputFileMap = new HashMap<>();
         outputFileMap.put(OUTPUT_FILE_KEY, outputFile);
         outputFileMap.put(FILE_OUTPUT_STREAM_KEY, fileOutputStream);
         this.outputFilesMap.put(fileName, outputFileMap);
-        System.out.println("CREE EL OUTPUT FILE");
         return fileOutputStream;
     }
 
@@ -180,12 +167,13 @@ public class ServerController {
             Map<String, Object> subMap = this.outputFilesMap.get(key);
             FileOutputStream outputStream = (FileOutputStream) subMap.get(FILE_OUTPUT_STREAM_KEY);
             try {
+                outputStream.flush();
                 outputStream.close();
             } catch (IOException e) {
                 LOGGER.log(Level.SEVERE, null, e);
-                break;
             }
         }
+        this.outputFilesMap.clear();
     }
 
 
@@ -211,6 +199,7 @@ public class ServerController {
         String mapString = gson.toJson(map);
         try {
             mapFileOutputStream.write(mapString.getBytes());
+            mapFileOutputStream.flush();
             mapFileOutputStream.close();
             new FileDescription(mapFile, this.recorder.getClass().getName());
         } catch (IOException e) {
@@ -220,7 +209,10 @@ public class ServerController {
 
     public void stopServer(int delay, boolean isCancelAction){
         /* AQUI hay que cerrar todos los archivos que se hayan abierto*/
-        if(!isCancelAction){
+        if(isCancelAction){
+            this.deleteOutputFiles();
+        }
+        else{
             this.closeFileOutputStreams();
             /* Una vez cerramos todos los streamos de los archivos, creamos el verdadero archivo que será utilizado por MO
             el que contiene un mapa que nos indica donde estan almacenados los archivos correspondientes a cada captura.
@@ -232,10 +224,18 @@ public class ServerController {
             */
             this.writeMapFile();
         }
-        else{
-            this.deleteOutputFiles();
-        }
         this.server.stop(delay);
+    }
+
+    /*  Metodo que permite terminar la captura actual,
+        cerrando streams y archivos para permitir realizar otra captura
+        sin detener realmente el servidor.
+        Esto se logra volviendo el enrutador a su estado "montado".
+    */
+    public void stopCapture(){
+        this.closeFileOutputStreams();
+        this.writeMapFile();
+        this.router.setStatus(Router.MOUNTED_STATUS);
     }
 
     public  void stopTestServer(){
