@@ -13,18 +13,21 @@ public class Response {
         try {
             exchange.sendResponseHeaders(status, response.length());
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
         OutputStream outputStream = exchange.getResponseBody();
         try {
             outputStream.write(response.getBytes());
         } catch (IOException e) {
             e.printStackTrace();
+            System.out.println(e.getMessage());
         }
         try {
+            outputStream.flush();
             outputStream.close();
         } catch (IOException e) {
             e.printStackTrace();
+            System.out.println(e.getMessage());
         }
     }
 }

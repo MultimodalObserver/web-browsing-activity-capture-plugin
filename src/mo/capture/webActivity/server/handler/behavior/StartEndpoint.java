@@ -5,5 +5,5 @@ import com.sun.net.httpserver.HttpExchange;
 
 public interface StartEndpoint {
 
-    public void start(HttpExchange exchange);
+    void start(HttpExchange exchange);
 }

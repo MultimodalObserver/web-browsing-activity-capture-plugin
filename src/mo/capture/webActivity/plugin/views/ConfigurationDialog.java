@@ -130,48 +130,56 @@ public class ConfigurationDialog  extends JDialog {
         this.setConstraintsForRightSide(constraints, false);
         constraints.insets = new Insets(10,5,5,10);
         contentPane.add(this.configurationNameTextField, constraints);
+
         /* Configuration name error label*/
         constraints = new GridBagConstraints();
         constraints.gridx=1;
         constraints.gridy=1;
         this.setConstraintsForRightSide(constraints, true);
         contentPane.add(this.configurationNameErrorLabel, constraints);
+
         /* Server Host Label*/
         constraints = new GridBagConstraints();
         constraints.gridx=0;
         constraints.gridy=2;
         this.setConstraintsForLeftSide(constraints);
         contentPane.add(this.serverIpLabel, constraints);
+
         /* Server host text field*/
         constraints = new GridBagConstraints();
         constraints.gridx=1;
         constraints.gridy=2;
         this.setConstraintsForRightSide(constraints, false);
         contentPane.add(this.serverIpTextField, constraints);
+
         /* Server host error label*/
         constraints = new GridBagConstraints();
         constraints.gridx=1;
         constraints.gridy=3;
         this.setConstraintsForRightSide(constraints, true);
         contentPane.add(this.serverIpErrorLabel, constraints);
+
         /* Server Port label*/
         constraints = new GridBagConstraints();
         constraints.gridx=0;
         constraints.gridy=4;
         this.setConstraintsForLeftSide(constraints);
         contentPane.add(this.serverPortLabel, constraints);
+
         /* Server port text field*/
         constraints = new GridBagConstraints();
         constraints.gridx=1;
         constraints.gridy=4;
         this.setConstraintsForRightSide(constraints, false);
         contentPane.add(this.serverPortTextField, constraints);
+
         /* Server port error label*/
         constraints = new GridBagConstraints();
         constraints.gridx=1;
         constraints.gridy=5;
         this.setConstraintsForRightSide(constraints, true);
         contentPane.add(this.serverPortErrorLabel,constraints);
+
         /* Check connection Checkbox*/
         constraints = new GridBagConstraints();
         constraints.gridx=0;
@@ -183,10 +191,12 @@ public class ConfigurationDialog  extends JDialog {
         constraints.fill=GridBagConstraints.HORIZONTAL;
         constraints.insets = new Insets(0,5,0,10);
         contentPane.add(this.checkConnectionCheckBox, constraints);
+
         /*Test result label*/
         constraints.gridy=7;
         constraints.insets= new Insets(5,15,5,10);
         contentPane.add(this.testServerLabel, constraints);
+
         /* Save Button*/
         constraints.gridy=8;
         constraints.insets= new Insets(5,10,10,10);
@@ -196,17 +206,14 @@ public class ConfigurationDialog  extends JDialog {
     private void setConstraintsForLeftSide(GridBagConstraints constraints){
         constraints.gridwidth=1;
         constraints.gridheight=2;
-        //constraints.weightx=1.0;
         constraints.weighty=1.0;
         constraints.insets= new Insets(5,10,5,5);
         constraints.anchor=GridBagConstraints.FIRST_LINE_START;
-        //constraints.fill=GridBagConstraints.HORIZONTAL;
     }
 
     private void setConstraintsForRightSide(GridBagConstraints constraints, boolean errorLabel){
         constraints.gridheight=1;
         constraints.gridwidth=GridBagConstraints.REMAINDER;
-        //constraints.weighty= 1.0;
         constraints.weightx=1.0;
         constraints.fill=GridBagConstraints.HORIZONTAL;
         int topInset = errorLabel ? 0 : 5;

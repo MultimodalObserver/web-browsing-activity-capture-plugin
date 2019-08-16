@@ -42,7 +42,7 @@ public abstract class CaptureHandler {
                 jsonObject.add(CAPTURE_MILLISECONDS_KEY, new JsonPrimitive(captureMilliseconds));
                 String realLine = gson.toJson(jsonObject) + LINE_SEPARATOR;
                 fileOutputStream.write(realLine.getBytes());
-                MessageSender.sendMessage("MESSAGE_CONTENT_KEY", realLine);
+                MessageSender.sendMessage(MESSAGE_CONTENT_KEY, realLine);
             } catch (IOException e) {
                 e.printStackTrace();
                 //System.out.println("Error al escribir la linea:");

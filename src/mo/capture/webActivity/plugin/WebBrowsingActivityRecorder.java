@@ -44,6 +44,7 @@ public class WebBrowsingActivityRecorder {
         String message = null;
         if(serverStatus == ServerController.CONNECTION_ESTABLISHED){
             message = this.i18n.s("connectionSuccessMessage") + "http://"+serverHost+":"+serverPort;
+            ServerController.getInstance().setRecorder(this);
         }
         else if(serverStatus == ServerController.UNKNOWN_HOST){
             message = this.i18n.s("unknownHostErrorMessage");
@@ -54,8 +55,7 @@ public class WebBrowsingActivityRecorder {
         else if(serverStatus == ServerController.PORT_NOT_AVAILABLE){
             message = this.i18n.s("portNotAvailableErrorMessage");
         }
-        ServerController.getInstance().setRecorder(this);
-        connectionSuccessDialog.setConnectionStatusLabelMessage(message);
+        connectionSuccessDialog.setSuccessStatus(message);
         connectionSuccessDialog.showDialog();
 
     }

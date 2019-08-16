@@ -119,35 +119,37 @@ public class ServerController {
         this.reportDate = reportDate;
     }
 
-    public FileOutputStream createOrGetOutputFile(String fileName){
-        String realFileName = this.reportDate + "_" + this.configuration.getId() + fileName.replace("/", "")
+    public FileOutputStream createOrGetOutputFile(String fileName) throws IOException {
+        System.out.println("LLEGUE");
+        String realFileName = this.reportDate + "_" + this.recorder.getWebBrowsingActivityConfiguration().getId() + fileName.replace("/", "")
                 + OUTPUT_FILE_EXTENSION;
+        System.out.println("LLEGUE1");
         /* Creamos un subdirectorio de nombre report date*/
         String parentPath = this.recorder.getStageFolder().getAbsolutePath();
+        System.out.println("LLEGUE2");
         this.reportFolder = new File(parentPath + System.getProperty("file.separator") + reportDate +
                 "_" + MAP_FILE_NAME);
+        System.out.println("LLEGUE3");
         this.reportFolder.mkdir();
         /*if(!folderCreated){
             LOGGER.log(Level.SEVERE, "An error occurred while trying to create the: " + reportDate + " folder");
             return null;
         }
         */
+        System.out.println(realFileName);
+        System.out.println(parentPath);
         File outputFile = new File(this.reportFolder, realFileName);
-        FileOutputStream fileOutputStream = null;
         if(this.outputFilesMap.containsKey(fileName)){
             return (FileOutputStream) this.outputFilesMap.get(fileName).get(FILE_OUTPUT_STREAM_KEY);
         }
-        try {
-            outputFile.createNewFile();
-            fileOutputStream = new FileOutputStream(outputFile);
-        } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, null, e);
-            return null;
-        }
+        System.out.println("WEBEO");
+        outputFile.createNewFile();
+        FileOutputStream fileOutputStream = new FileOutputStream(outputFile);
         Map<String, Object> outputFileMap = new HashMap<>();
         outputFileMap.put(OUTPUT_FILE_KEY, outputFile);
         outputFileMap.put(FILE_OUTPUT_STREAM_KEY, fileOutputStream);
         this.outputFilesMap.put(fileName, outputFileMap);
+        System.out.println("CREE EL OUTPUT FILE");
         return fileOutputStream;
     }
 
