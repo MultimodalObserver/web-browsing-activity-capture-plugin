@@ -77,6 +77,8 @@ public class Router implements HttpHandler {
         RouteHandlerInfo mouseClicksPostRouteHandlerInfo = new RouteHandlerInfo( BASE_PACKAGE + "handler.MouseClicksHandler", "store");
         RouteHandlerInfo startPostHandlerInfo = new RouteHandlerInfo(BASE_PACKAGE + "handler.StartHandler", "start");
         RouteHandlerInfo stopPostHandlerInfo = new RouteHandlerInfo(BASE_PACKAGE + "handler.StopHandler", "stop");
+        RouteHandlerInfo tabsPostRouteHandlerInfo = new RouteHandlerInfo(BASE_PACKAGE + "handler.TabsHandler", "store");
+        RouteHandlerInfo searchsPostRouteHandlerInfo = new RouteHandlerInfo(BASE_PACKAGE + "handler.SearchsHandler", "store");
 
         this.addRoute("/keystrokes","POST", keystrokesPostRouteHandlerInfo);
         this.addRoute("/mouseUps", "POST", mouseUpsPostRouteHandlerInfo);
@@ -84,6 +86,8 @@ public class Router implements HttpHandler {
         this.addRoute("/mouseClicks", "POST", mouseClicksPostRouteHandlerInfo);
         this.addRoute("/start", "POST", startPostHandlerInfo);
         this.addRoute("/stop", "POST", stopPostHandlerInfo);
+        this.addRoute("/tabs", "POST", tabsPostRouteHandlerInfo);
+        this.addRoute("/searchs", "POST", searchsPostRouteHandlerInfo);
     }
 
     public void addRoute(String path, String httpMethod, RouteHandlerInfo routeHandlerInfo){
