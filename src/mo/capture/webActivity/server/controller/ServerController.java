@@ -120,7 +120,8 @@ public class ServerController {
     }
 
     public FileOutputStream createOrGetOutputFile(String fileName) throws IOException {
-        String realFileName = this.reportDate + "_" + this.recorder.getWebBrowsingActivityConfiguration().getId() + fileName.replace("/", "")
+        String realFileName = this.reportDate + "_" + this.recorder.getWebBrowsingActivityConfiguration().getId() + "_" +
+                fileName.replace("/", "")
                 + OUTPUT_FILE_EXTENSION;
         /* Creamos un subdirectorio de nombre report date*/
         String parentPath = this.recorder.getStageFolder().getAbsolutePath();

@@ -14,6 +14,7 @@ public class Response {
             exchange.sendResponseHeaders(status, response.length());
         } catch (IOException e) {
             System.out.println(e.getMessage());
+            return;
         }
         OutputStream outputStream = exchange.getResponseBody();
         try {
@@ -21,6 +22,7 @@ public class Response {
         } catch (IOException e) {
             e.printStackTrace();
             System.out.println(e.getMessage());
+            return;
         }
         try {
             outputStream.flush();
