@@ -20,6 +20,5 @@ public class MessageSender {
         for(RemoteClient client : clients){
             client.send(petitionResponse);
         }
-        //System.out.println("Envie mensaje");
     }
 }

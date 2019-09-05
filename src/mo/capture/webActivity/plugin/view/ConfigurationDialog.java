@@ -1,13 +1,12 @@
-package mo.capture.webActivity.plugin.views;
+package mo.capture.webActivity.plugin.view;
 
 import javax.swing.*;
-import mo.capture.webActivity.plugin.models.CaptureConfiguration;
+import mo.capture.webActivity.plugin.model.CaptureConfiguration;
 import mo.capture.webActivity.server.controller.ServerController;
 import mo.core.I18n;
 import mo.core.ui.Utils;
 
 import java.awt.*;
-import java.io.Console;
 
 public class ConfigurationDialog  extends JDialog {
 

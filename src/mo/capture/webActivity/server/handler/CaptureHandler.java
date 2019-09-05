@@ -1,18 +1,11 @@
 package mo.capture.webActivity.server.handler;
 
 import com.google.gson.Gson;
+import mo.capture.webActivity.plugin.model.DataMessage;
+import mo.capture.webActivity.server.handler.behavior.CaptureEndpoint;
 import mo.capture.webActivity.util.MessageSender;
-import mo.communication.streaming.capture.PluginCaptureListener;
-import mo.capture.webActivity.plugin.WebBrowsingActivityRecorder;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.JsonPrimitive;
 
 import java.io.*;
-import java.net.URLDecoder;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.stream.Stream;
 
 /* Clase que implementa funcionalidades básicas para los demás handler, por medio de herencia, como lo son:
@@ -22,27 +15,27 @@ import java.util.stream.Stream;
     - Print de contenido recibido.
     - Obtención de query params de una petición HTTP.
  */
-public abstract class CaptureHandler {
+public abstract class CaptureHandler implements CaptureEndpoint {
 
-    private static final String LINE_SEPARATOR = System.getProperty("line.separator");
-    private static final String CAPTURE_MILLISECONDS_KEY = "captureMilliseconds";
     private static final String MESSAGE_CONTENT_KEY = "data";
+    public static final String COMMA_SEPARATOR = ",";
+    private static final Gson gson = new Gson();
+    String handledDataType;
 
 
     void writeAndSendData(InputStream inputStream, FileOutputStream fileOutputStream, long captureMilliseconds){
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
         Stream bodyStream =  bufferedReader.lines();
         Object[] jsonArray = bodyStream.toArray();
-        JsonParser parser = new JsonParser();
-        Gson gson = new Gson();
         for (Object line : jsonArray){
             try {
                 //System.out.println("Voy a escribir: "+ String.valueOf(line));
-                JsonObject jsonObject = parser.parse(String.valueOf(line)).getAsJsonObject();
-                jsonObject.add(CAPTURE_MILLISECONDS_KEY, new JsonPrimitive(captureMilliseconds));
-                String realLine = gson.toJson(jsonObject) + LINE_SEPARATOR;
-                fileOutputStream.write(realLine.getBytes());
-                MessageSender.sendMessage(MESSAGE_CONTENT_KEY, realLine);
+                DataMessage dataMessage = new DataMessage();
+                dataMessage.setCaptureMilliseconds(captureMilliseconds);
+                dataMessage.setData(String.valueOf(line));
+                fileOutputStream.write((gson.toJson(dataMessage) + COMMA_SEPARATOR).getBytes());
+                dataMessage.setDataType(this.handledDataType);
+                MessageSender.sendMessage(MESSAGE_CONTENT_KEY, gson.toJson(dataMessage));
             } catch (IOException e) {
                 e.printStackTrace();
                 //System.out.println("Error al escribir la linea:");
@@ -50,40 +43,5 @@ public abstract class CaptureHandler {
             }
         }
         //System.out.println("Archivo de salida cerrado correctamente");
-    }
-
-    private void print(InputStream inputStream){
-        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
-        Stream bodyStream =  bufferedReader.lines();
-        bodyStream.forEach(line -> {
-            System.out.println(line);
-        });
-    }
-
-    public static Map<String, String> parseQueryString(String qs) {
-        Map<String, String> result = new HashMap<>();
-        if (qs == null)
-            return result;
-
-        int last = 0, next, l = qs.length();
-        while (last < l) {
-            next = qs.indexOf('&', last);
-            if (next == -1)
-                next = l;
-
-            if (next > last) {
-                int eqPos = qs.indexOf('=', last);
-                try {
-                    if (eqPos < 0 || eqPos > next)
-                        result.put(URLDecoder.decode(qs.substring(last, next), "utf-8"), "");
-                    else
-                        result.put(URLDecoder.decode(qs.substring(last, eqPos), "utf-8"), URLDecoder.decode(qs.substring(eqPos + 1, next), "utf-8"));
-                } catch (UnsupportedEncodingException e) {
-                    throw new RuntimeException(e); // will never happen, utf-8 support is mandatory for java
-                }
-            }
-            last = next + 1;
-        }
-        return result;
     }
 }

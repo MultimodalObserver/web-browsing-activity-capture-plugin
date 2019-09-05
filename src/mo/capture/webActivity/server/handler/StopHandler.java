@@ -3,7 +3,7 @@ package mo.capture.webActivity.server.handler;
 import com.sun.net.httpserver.HttpExchange;
 import mo.capture.webActivity.server.controller.ServerController;
 import mo.capture.webActivity.server.handler.behavior.StopEndpoint;
-import mo.capture.webActivity.server.utilities.Response;
+import mo.capture.webActivity.server.util.Response;
 
 public class StopHandler implements StopEndpoint {
 

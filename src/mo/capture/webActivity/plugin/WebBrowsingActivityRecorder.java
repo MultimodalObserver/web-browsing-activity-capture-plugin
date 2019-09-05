@@ -1,6 +1,6 @@
 package mo.capture.webActivity.plugin;
 
-import mo.capture.webActivity.plugin.views.ConnectionSuccessDialog;
+import mo.capture.webActivity.plugin.view.ConnectionSuccessDialog;
 import mo.capture.webActivity.server.controller.ServerController;
 import mo.capture.webActivity.server.router.Router;
 import mo.communication.streaming.capture.CaptureConfig;
@@ -73,6 +73,7 @@ public class WebBrowsingActivityRecorder {
     }
 
     public void cancel(){
+        System.out.println("Voy a cancelar");
         ServerController.getInstance().stopServer(0, true);
     }
 

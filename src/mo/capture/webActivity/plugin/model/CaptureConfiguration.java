@@ -1,4 +1,4 @@
-package mo.capture.webActivity.plugin.models;
+package mo.capture.webActivity.plugin.model;
 
 public class CaptureConfiguration {
 
@@ -16,23 +16,14 @@ public class CaptureConfiguration {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
 
     public String getServerIp() {
         return serverIp;
     }
 
-    public void setServerIp(String serverIp) {
-        this.serverIp = serverIp;
-    }
 
     public String getServerPort() {
         return serverPort;
     }
 
-    public void setServerPort(String serverPort) {
-        this.serverPort = serverPort;
-    }
 }

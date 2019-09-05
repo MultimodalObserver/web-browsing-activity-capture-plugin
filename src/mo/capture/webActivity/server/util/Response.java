@@ -1,4 +1,4 @@
-package mo.capture.webActivity.server.utilities;
+package mo.capture.webActivity.server.util;
 
 import mo.capture.webActivity.server.middleware.Cors;
 import com.sun.net.httpserver.HttpExchange;

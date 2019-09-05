@@ -2,10 +2,8 @@ package mo.capture.webActivity.plugin;
 
 import bibliothek.util.xml.XElement;
 import bibliothek.util.xml.XIO;
-import mo.capture.webActivity.plugin.views.ConfigurationDialog;
+import mo.capture.webActivity.plugin.view.ConfigurationDialog;
 import mo.capture.CaptureProvider;
-import mo.capture.webActivity.plugin.views.ConnectionSuccessDialog;
-import mo.capture.webActivity.server.controller.ServerController;
 import mo.communication.streaming.capture.PluginCaptureListener;
 import mo.core.I18n;
 import mo.core.plugin.Extends;
@@ -37,7 +35,7 @@ public class WebBrowsingActivityCapturePlugin implements CaptureProvider{
     List<Configuration> configurations;
     List<PluginCaptureListener> dataListeners;
 
-    public WebBrowsingActivityCapturePlugin(){
+    private WebBrowsingActivityCapturePlugin(){
         this.configurations = new ArrayList<>();
         this.i18n = new I18n(WebBrowsingActivityCapturePlugin.class);
         this.dataListeners = new ArrayList<>();

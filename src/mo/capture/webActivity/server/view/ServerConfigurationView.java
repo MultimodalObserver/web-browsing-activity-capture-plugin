@@ -1,4 +1,4 @@
-package mo.capture.webActivity.server.views;
+package mo.capture.webActivity.server.view;
 
 import mo.capture.webActivity.server.controller.ServerController;
 

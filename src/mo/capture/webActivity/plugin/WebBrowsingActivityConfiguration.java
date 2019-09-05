@@ -1,6 +1,6 @@
 package mo.capture.webActivity.plugin;
 
-import mo.capture.webActivity.plugin.models.CaptureConfiguration;
+import mo.capture.webActivity.plugin.model.CaptureConfiguration;
 import mo.capture.RecordableConfiguration;
 import mo.communication.streaming.capture.PluginCaptureListener;
 import mo.communication.streaming.capture.PluginCaptureSender;
@@ -21,7 +21,7 @@ public class WebBrowsingActivityConfiguration implements RecordableConfiguration
     public static final String PLUGIN_MESSAGE_KEY = "webActivity";
 
 
-    public WebBrowsingActivityConfiguration(CaptureConfiguration temporalConfig){
+    WebBrowsingActivityConfiguration(CaptureConfiguration temporalConfig){
         this.temporalConfig = temporalConfig;
         this.webBrowsingActivityRecorder = null;
     }
@@ -31,7 +31,7 @@ public class WebBrowsingActivityConfiguration implements RecordableConfiguration
    MO ha sido cerrado.
    Esto es para que las configuraciones no se pierdan
     */
-    public WebBrowsingActivityConfiguration(File file){
+    WebBrowsingActivityConfiguration(File file){
         String fileName = file.getName();
         String configData = fileName.substring(0, fileName.lastIndexOf("."));
         String[] configElements = configData.split("_");

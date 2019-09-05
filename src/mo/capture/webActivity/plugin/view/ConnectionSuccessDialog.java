@@ -1,4 +1,4 @@
-package mo.capture.webActivity.plugin.views;
+package mo.capture.webActivity.plugin.view;
 
 import mo.capture.webActivity.server.controller.ServerController;
 import mo.capture.webActivity.server.router.RouteHandlerInfo;
@@ -88,7 +88,7 @@ public class ConnectionSuccessDialog extends JDialog {
         Container contentPane = this.getContentPane();
         for(Object key : routes.keySet()){
             String route = key.toString();
-            if(route.equals("/start")){
+            if(route.equals("/start") || route.equals("/stop")){
                 continue;
             }
             String endpoint = protocol + serverHost + ":" + serverPort + route;

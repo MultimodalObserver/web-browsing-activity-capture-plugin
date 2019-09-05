@@ -1,12 +1,13 @@
 package mo.capture.webActivity.server.controller;
 
 import com.google.gson.Gson;
+import mo.capture.webActivity.server.handler.CaptureHandler;
 import mo.communication.streaming.capture.PluginCaptureListener;
 import mo.capture.webActivity.plugin.WebBrowsingActivityConfiguration;
 import mo.capture.webActivity.plugin.WebBrowsingActivityRecorder;
 import mo.capture.webActivity.server.middleware.Cors;
 import mo.capture.webActivity.server.router.Router;
-import mo.capture.webActivity.server.views.ServerConfigurationView;
+import mo.capture.webActivity.server.view.ServerConfigurationView;
 import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpServer;
 import mo.organization.FileDescription;
@@ -25,6 +26,11 @@ public class ServerController {
 
     private static ServerController instance = null;
 
+    private static final String CSV_FORMAT = "csv";
+    private static final String JSON_FORMAT = "json";
+    private static final String INIT_JSON_ARRAY = "[";
+    private static final String END_JSON_ARRAY = "]";
+
     public static final int UNKNOWN_HOST = 1;
     public static final int PORT_NOT_AVAILABLE = 2;
     public static final int INVALID_PORT = 3;
@@ -34,7 +40,7 @@ public class ServerController {
     private InetSocketAddress inetSocketAddress;
 
     /*Para el manejo de almacenamiento de los datos capturados*/
-    private File reportFolder;
+    private List<File> reportFolders;
     private WebBrowsingActivityConfiguration configuration;
     private Map<String, Map<String, Object>> outputFilesMap;
     private static final String OUTPUT_FILE_EXTENSION = ".json";
@@ -57,7 +63,7 @@ public class ServerController {
         this.inetSocketAddress = null;
         this.outputFilesMap = new HashMap<>();
         this.reportDate = null;
-        this.reportFolder = null;
+        this.reportFolders = new ArrayList<>();
     }
 
     public static ServerController getInstance(){
@@ -120,20 +126,41 @@ public class ServerController {
     }
 
     public FileOutputStream createOrGetOutputFile(String fileName) throws IOException {
+        if(this.outputFilesMap.containsKey(fileName)){
+            return (FileOutputStream) this.outputFilesMap.get(fileName).get(FILE_OUTPUT_STREAM_KEY);
+        }
         String realFileName = this.reportDate + "_" + this.recorder.getWebBrowsingActivityConfiguration().getId() + "_" +
                 fileName.replace("/", "")
                 + OUTPUT_FILE_EXTENSION;
         /* Creamos un subdirectorio de nombre report date*/
         String parentPath = this.recorder.getStageFolder().getAbsolutePath();
-        this.reportFolder = new File(parentPath + System.getProperty("file.separator") + reportDate +
-                "_" + MAP_FILE_NAME);
-        this.reportFolder.mkdir();
-        File outputFile = new File(this.reportFolder, realFileName);
-        if(this.outputFilesMap.containsKey(fileName)){
-            return (FileOutputStream) this.outputFilesMap.get(fileName).get(FILE_OUTPUT_STREAM_KEY);
+        /* Podemos tener varias de estas report folders a lo largo de la ejecucion del plugin, solo creamos una nueva
+        cuando el mapa de output files esta vacio, lo que significa que recien se va a crear el primer archivo de un proceso
+        de captura, y por tanto se crea el report folder antes
+
+        Si no, se trae el ultimo report folder de la lista, que representa el report folder de la captura actual
+         */
+        File activeReportFolder;
+        if(this.outputFilesMap.isEmpty()){
+            activeReportFolder = new File(parentPath + System.getProperty("file.separator") + reportDate +
+                    "_" + MAP_FILE_NAME);
+            activeReportFolder.mkdir();
+            this.reportFolders.add(activeReportFolder);
         }
+        else{
+            activeReportFolder = this.reportFolders.get(this.reportFolders.size()- 1);
+        }
+        File outputFile = new File(activeReportFolder, realFileName);
         outputFile.createNewFile();
         FileOutputStream fileOutputStream = new FileOutputStream(outputFile);
+        String outputFileExtension = this.recorder.getWebBrowsingActivityConfiguration().getTemporalConfig().getName();
+        if(outputFileExtension.equals(CSV_FORMAT)){
+            String firstLine = "JEADERs" + System.getProperty("line.separator");
+            fileOutputStream.write(firstLine.getBytes());
+        }
+        else if(outputFileExtension.equals(JSON_FORMAT)){
+            fileOutputStream.write(INIT_JSON_ARRAY.getBytes());
+        }
         Map<String, Object> outputFileMap = new HashMap<>();
         outputFileMap.put(OUTPUT_FILE_KEY, outputFile);
         outputFileMap.put(FILE_OUTPUT_STREAM_KEY, fileOutputStream);
@@ -146,20 +173,24 @@ public class ServerController {
             Map<String, Object> subMap = this.outputFilesMap.get(key);
                 File outputFile = (File) subMap.get(OUTPUT_FILE_KEY);
                 if (!outputFile.isFile()) {
-                    break;
+                    continue;
                 }
                 FileOutputStream outputStream = (FileOutputStream) subMap.get(FILE_OUTPUT_STREAM_KEY);
                 try {
+                    outputStream.flush();
                     outputStream.close();
                 } catch (IOException e) {
                     LOGGER.log(Level.SEVERE, null, e);
-                    break;
+                    continue;
                 }
                 outputFile.delete();
         }
-        if(this.reportFolder != null && this.outputFilesMap != null){
-            this.reportFolder.delete();
-            this.outputFilesMap.clear();
+        this.outputFilesMap.clear();
+        if(this.reportFolders != null && !this.reportFolders.isEmpty()){
+            for(File folder : this.reportFolders){
+                System.out.println(folder.getName());
+                folder.delete();
+            }
         }
     }
 
@@ -168,6 +199,11 @@ public class ServerController {
             Map<String, Object> subMap = this.outputFilesMap.get(key);
             FileOutputStream outputStream = (FileOutputStream) subMap.get(FILE_OUTPUT_STREAM_KEY);
             try {
+                outputStream.flush();
+                long channelSize = outputStream.getChannel().position();
+                long sizeWithoutLastComma = channelSize - CaptureHandler.COMMA_SEPARATOR.getBytes().length;
+                outputStream.getChannel().truncate(sizeWithoutLastComma);
+                outputStream.write(END_JSON_ARRAY.getBytes());
                 outputStream.flush();
                 outputStream.close();
             } catch (IOException e) {
@@ -226,6 +262,9 @@ public class ServerController {
             this.writeMapFile();
         }
         this.server.stop(delay);
+        this.server = null;
+        this.router = null;
+        instance = null;
     }
 
     /*  Metodo que permite terminar la captura actual,

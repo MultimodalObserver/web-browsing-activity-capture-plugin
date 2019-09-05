@@ -3,7 +3,7 @@ package mo.capture.webActivity.server.router;
 import mo.capture.webActivity.server.handler.behavior.LifecycleEndpoint;
 import mo.capture.webActivity.server.controller.ServerController;
 import mo.capture.webActivity.server.handler.behavior.CaptureEndpoint;
-import mo.capture.webActivity.server.utilities.Response;
+import mo.capture.webActivity.server.util.Response;
 import mo.capture.webActivity.util.DateHelper;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -11,10 +11,12 @@ import com.sun.net.httpserver.HttpHandler;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.util.*;
+import java.util.logging.Logger;
 
 /* Clase que implementa funcionalidades de un router o enrutador. Su principal funcion es hacer un match entre
 el recurso buscado en el servidor, mediante la URI consultada, especificamente el path y el manejador, controlador o handler
@@ -55,6 +57,7 @@ DE LA FUNCION PRINCIPAL DEL PROGRAMA!!.
 
 public class Router implements HttpHandler {
 
+    private static final Logger LOGGER = Logger.getLogger(Router.class.getName());
     public static final int MOUNTED_STATUS = 0;
     public static final int RUNNING_STATUS = 1;
     public static final int PAUSED_STATUS = 2;
@@ -178,8 +181,9 @@ public class Router implements HttpHandler {
         try {
             handlerClass = Class.forName(routeHandlerInfo.getHandlerClassName());
         } catch (ClassNotFoundException e) {
-            System.out.println(e.getMessage());
-            Response.sendResponse("handler class not found for the " + path + " route", 500, exchange);
+            String message = "handler class not found for the " + path + " route";
+            LOGGER.warning(message);
+            Response.sendResponse(message, 500, exchange);
             return;
         }
         String handlerClassMethodName = routeHandlerInfo.getHandlerClassMethodName();
@@ -189,9 +193,11 @@ public class Router implements HttpHandler {
             classConstructor = handlerClass.getConstructor();
             instance= classConstructor.newInstance();
             if(instance instanceof CaptureEndpoint){
+                Field handledDataTypeField = handlerClass.getSuperclass().getDeclaredField("handledDataType");
+                String handledDataType = String.valueOf(handledDataTypeField.get(instance));
                 Method method = handlerClass.getMethod(handlerClassMethodName, HttpExchange.class, FileOutputStream.class,
                         long.class);
-                FileOutputStream fileOutputStream = ServerController.getInstance().createOrGetOutputFile(path);
+                FileOutputStream fileOutputStream = ServerController.getInstance().createOrGetOutputFile(handledDataType);
                 long now = DateHelper.nowMilliseconds();
                 long resumedCaptureTime = this.pauseTime + (now - this.resumeTime);
                 long captureMilliseconds = this.resumeTime == 0 ? now : resumedCaptureTime;
@@ -204,9 +210,17 @@ public class Router implements HttpHandler {
 
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
             /* Loggear Error*/
-            Response.sendResponse("Error on the " + path + " handler", 500, exchange);
+            String message = "Error on the " + path + " route handler";
+            LOGGER.warning(message);
+            Response.sendResponse(message, 500, exchange);
         } catch (IOException e) {
-            Response.sendResponse("Error while trying to store data for the" + path + " handler", 500, exchange);
+            String message = "Error while trying to store data for the" + path + " route handler";
+            LOGGER.warning(message);
+            Response.sendResponse(message, 500, exchange);
+        } catch (NoSuchFieldException e) {
+            String message = "Error while triying to get the handled data type for the " + path + " route handler";
+            LOGGER.warning(message);
+            Response.sendResponse(message, 500, exchange);
         }
     }
 

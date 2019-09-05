@@ -1,15 +1,16 @@
 package mo.capture.webActivity.server.handler;
 
-import mo.communication.streaming.capture.PluginCaptureListener;
-import mo.capture.webActivity.plugin.WebBrowsingActivityRecorder;
-import mo.capture.webActivity.server.handler.behavior.CaptureEndpoint;
-import mo.capture.webActivity.server.utilities.Response;
+import mo.capture.webActivity.server.util.Response;
 import com.sun.net.httpserver.HttpExchange;
 
 import java.io.FileOutputStream;
-import java.util.List;
 
-public class KeystrokesHandler extends CaptureHandler implements CaptureEndpoint {
+public class KeystrokesHandler extends CaptureHandler{
+
+    public KeystrokesHandler() {
+        this.handledDataType = "keystrokes";
+    }
+
     @Override
     public void store(HttpExchange exchange, FileOutputStream fileOutputStream, long captureMilliseconds) {
         this.writeAndSendData(exchange.getRequestBody(), fileOutputStream, captureMilliseconds);
