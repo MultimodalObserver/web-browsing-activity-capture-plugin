@@ -21,7 +21,7 @@ public class WebBrowsingActivityConfiguration implements RecordableConfiguration
     public static final String PLUGIN_MESSAGE_KEY = "webActivity";
 
 
-    WebBrowsingActivityConfiguration(CaptureConfiguration temporalConfig){
+    public WebBrowsingActivityConfiguration(CaptureConfiguration temporalConfig){
         this.temporalConfig = temporalConfig;
         this.webBrowsingActivityRecorder = null;
     }
@@ -31,7 +31,7 @@ public class WebBrowsingActivityConfiguration implements RecordableConfiguration
    MO ha sido cerrado.
    Esto es para que las configuraciones no se pierdan
     */
-    WebBrowsingActivityConfiguration(File file){
+    public WebBrowsingActivityConfiguration(File file){
         String fileName = file.getName();
         String configData = fileName.substring(0, fileName.lastIndexOf("."));
         String[] configElements = configData.split("_");

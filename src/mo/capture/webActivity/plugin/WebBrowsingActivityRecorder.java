@@ -57,7 +57,6 @@ public class WebBrowsingActivityRecorder {
         }
         connectionSuccessDialog.setSuccessStatus(message);
         connectionSuccessDialog.showDialog();
-
     }
 
     public void stop(){

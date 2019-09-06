@@ -16,6 +16,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.util.*;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /* Clase que implementa funcionalidades de un router o enrutador. Su principal funcion es hacer un match entre
@@ -211,15 +212,15 @@ public class Router implements HttpHandler {
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
             /* Loggear Error*/
             String message = "Error on the " + path + " route handler";
-            LOGGER.warning(message);
+            LOGGER.log(Level.SEVERE, message, e);
             Response.sendResponse(message, 500, exchange);
         } catch (IOException e) {
             String message = "Error while trying to store data for the" + path + " route handler";
-            LOGGER.warning(message);
+            LOGGER.log(Level.SEVERE, message, e);
             Response.sendResponse(message, 500, exchange);
         } catch (NoSuchFieldException e) {
             String message = "Error while triying to get the handled data type for the " + path + " route handler";
-            LOGGER.warning(message);
+            LOGGER.log(Level.SEVERE, message, e);
             Response.sendResponse(message, 500, exchange);
         }
     }

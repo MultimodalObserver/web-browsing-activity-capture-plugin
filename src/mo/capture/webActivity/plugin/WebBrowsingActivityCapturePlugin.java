@@ -32,10 +32,10 @@ public class WebBrowsingActivityCapturePlugin implements CaptureProvider{
 
     private static final Logger LOGGER = Logger.getLogger(WebBrowsingActivityCapturePlugin.class.getName());
     private I18n i18n;
-    List<Configuration> configurations;
-    List<PluginCaptureListener> dataListeners;
+    public List<Configuration> configurations;
+    public List<PluginCaptureListener> dataListeners;
 
-    private WebBrowsingActivityCapturePlugin(){
+    public WebBrowsingActivityCapturePlugin(){
         this.configurations = new ArrayList<>();
         this.i18n = new I18n(WebBrowsingActivityCapturePlugin.class);
         this.dataListeners = new ArrayList<>();

@@ -20,7 +20,7 @@ public abstract class CaptureHandler implements CaptureEndpoint {
     private static final String MESSAGE_CONTENT_KEY = "data";
     public static final String COMMA_SEPARATOR = ",";
     private static final Gson gson = new Gson();
-    String handledDataType;
+    public String handledDataType;
 
 
     void writeAndSendData(InputStream inputStream, FileOutputStream fileOutputStream, long captureMilliseconds){
