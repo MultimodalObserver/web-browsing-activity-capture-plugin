@@ -12,8 +12,8 @@ public class MouseClicksHandler extends CaptureHandler {
     }
 
     @Override
-    public void store(HttpExchange exchange, FileOutputStream fileOutputStream, long captureMilliseconds) {
-        this.writeAndSendData(exchange.getRequestBody(), fileOutputStream, captureMilliseconds);
+    public void store(HttpExchange exchange, FileOutputStream fileOutputStream, long captureMilliseconds, String outputFormat) {
+        this.writeAndSendData(exchange.getRequestBody(), fileOutputStream, captureMilliseconds, outputFormat);
         String response = "Mensaje recibido";
         Response.sendResponse(response,200, exchange);
     }

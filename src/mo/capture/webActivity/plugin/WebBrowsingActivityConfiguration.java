@@ -8,7 +8,12 @@ import mo.organization.Configuration;
 import mo.organization.Participant;
 import mo.organization.ProjectOrganization;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -20,26 +25,14 @@ public class WebBrowsingActivityConfiguration implements RecordableConfiguration
     private static final Logger LOGGER = Logger.getLogger(WebBrowsingActivityConfiguration.class.getName());
     public static final String PLUGIN_MESSAGE_KEY = "webActivity";
 
+    public WebBrowsingActivityConfiguration(){
+
+    }
+
 
     public WebBrowsingActivityConfiguration(CaptureConfiguration temporalConfig){
         this.temporalConfig = temporalConfig;
         this.webBrowsingActivityRecorder = null;
-    }
-
-    /* Constructor que es utilizado para crear la configuración desde los archivos relacionados al plugin (que
-   almacenan su info), luego de que
-   MO ha sido cerrado.
-   Esto es para que las configuraciones no se pierdan
-    */
-    public WebBrowsingActivityConfiguration(File file){
-        String fileName = file.getName();
-        String configData = fileName.substring(0, fileName.lastIndexOf("."));
-        String[] configElements = configData.split("_");
-        /* El elemento 0 es la palabra web-browsing-activity*/
-        String configurationName = configElements[1];
-        String serverIp = configElements[2];
-        String serverPort = configElements[3];
-        this.temporalConfig =  new CaptureConfiguration(configurationName, serverIp, serverPort);
     }
 
     @Override
@@ -84,7 +77,7 @@ public class WebBrowsingActivityConfiguration implements RecordableConfiguration
 
     @Override
     public String getCreator() {
-        return WebBrowsingActivityConfiguration.class.getName();
+        return WebBrowsingActivityRecorder.class.getName();
     }
 
     @Override
@@ -115,12 +108,17 @@ public class WebBrowsingActivityConfiguration implements RecordableConfiguration
     @Override
     public File toFile(File parent) {
         try {
-            String childFileName = "web-browsing-activity_"+this.temporalConfig.getName()+
-                    "_"+this.temporalConfig.getServerIp() + "_" + this.temporalConfig.getServerPort() + ".xml";
+            String childFileName = "web-browsing-activity_"+this.temporalConfig.getName()+".xml";
             File f = new File(parent, childFileName);
-            f.createNewFile();
+            FileOutputStream fileOutputStream = new FileOutputStream(f);
+            JAXBContext jaxbContext = JAXBContext.newInstance(CaptureConfiguration.class);
+            Marshaller marshaller = jaxbContext.createMarshaller();
+            marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+            marshaller.marshal(this.temporalConfig, fileOutputStream);
+            fileOutputStream.flush();
+            fileOutputStream.close();
             return f;
-        } catch (IOException ex) {
+        } catch (IOException | JAXBException ex) {
             LOGGER.log(Level.SEVERE, null, ex);
         }
         return null;
@@ -128,17 +126,15 @@ public class WebBrowsingActivityConfiguration implements RecordableConfiguration
 
     @Override
     public Configuration fromFile(File file) {
-        String fileName = file.getName();
-        if(!fileName.contains("_") || !fileName.contains(".")){
+        try {
+            JAXBContext jaxbContext = JAXBContext.newInstance(CaptureConfiguration.class);
+            Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
+            CaptureConfiguration auxConfig = (CaptureConfiguration) unmarshaller.unmarshal(file);
+            return new WebBrowsingActivityConfiguration(auxConfig);
+        } catch (JAXBException e) {
+            e.printStackTrace();
             return null;
         }
-        String configData = fileName.substring(0, fileName.lastIndexOf("."));
-        String[] configElements = configData.split("_");
-        String configurationName = configElements[0];
-        String serverIp = configElements[1];
-        String serverPort = configElements[2];
-        CaptureConfiguration auxConfig = new CaptureConfiguration(configurationName, serverIp, serverPort);
-        return new WebBrowsingActivityConfiguration(auxConfig);
     }
 
     public CaptureConfiguration getTemporalConfig() {

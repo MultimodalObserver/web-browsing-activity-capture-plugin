@@ -24,6 +24,8 @@ public class ConfigurationDialog  extends JDialog {
     private JLabel serverPortErrorLabel;
     private JCheckBox checkConnectionCheckBox;
     private JLabel testServerLabel;
+    private JLabel formatLabel;
+    private JComboBox<String> formatComboBox;
     private I18n i18n;
 
 
@@ -74,8 +76,15 @@ public class ConfigurationDialog  extends JDialog {
         this.serverPortErrorLabel = new JLabel();
         this.serverPortErrorLabel.setVisible(false);
         this.serverPortErrorLabel.setForeground(Color.RED);
-        /*constraints.gridy=5;
-        contentPane.add(this.serverPortErrorLabel, constraints);*/
+
+
+        /*Output file format label*/
+        this.formatLabel = new JLabel(this.i18n.s("outputFormatLabelText"));
+
+        /*Output format combo box */
+        this.formatComboBox = new JComboBox<>();
+        this.formatComboBox.addItem(ServerController.JSON_FORMAT);
+        this.formatComboBox.addItem(ServerController.CSV_FORMAT);
 
         /* Check connection CheckBox */
         this.checkConnectionCheckBox = new JCheckBox(this.i18n.s("checkConnectionCheckBoxText"));
@@ -89,26 +98,6 @@ public class ConfigurationDialog  extends JDialog {
         /* Save Button*/
         this.saveConfigButton = new JButton(this.i18n.s("saveConfigButtonText"));
     }
-
-    /*private void centerComponents(){
-        *//* Config name*//*
-        this.configurationNameLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        this.configurationNameTextField.setAlignmentX(Component.CENTER_ALIGNMENT);
-        this.configurationNameErrorLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        *//* Server host*//*
-        this.serverIpLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        this.serverIpTextField.setAlignmentX(Component.CENTER_ALIGNMENT);
-        this.serverIpErrorLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        *//* Server Port*//*
-        this.serverPortLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        this.serverPortTextField.setAlignmentX(Component.CENTER_ALIGNMENT);
-        this.serverPortErrorLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        *//* Check connection Checkbox*//*
-        this.checkConnectionCheckBox.setAlignmentX(Component.CENTER_ALIGNMENT);
-        this.testServerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        *//* Save Button*//*
-        this.saveConfigButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-    }*/
 
     private void addComponents(){
         Container contentPane = this.getContentPane();
@@ -179,10 +168,25 @@ public class ConfigurationDialog  extends JDialog {
         this.setConstraintsForRightSide(constraints, true);
         contentPane.add(this.serverPortErrorLabel,constraints);
 
+        /* Output Format Label*/
+        constraints = new GridBagConstraints();
+        constraints.gridx = 0;
+        constraints.gridy = 6;
+        this.setConstraintsForLeftSide(constraints);
+        constraints.gridheight =1;
+        contentPane.add(this.formatLabel, constraints);
+
+        /* Output combo box*/
+        constraints = new GridBagConstraints();
+        constraints.gridx = 1;
+        constraints.gridy = 6;
+        this.setConstraintsForRightSide(constraints, false);
+        contentPane.add(this.formatComboBox, constraints);
+
         /* Check connection Checkbox*/
         constraints = new GridBagConstraints();
         constraints.gridx=0;
-        constraints.gridy=6;
+        constraints.gridy=7;
         constraints.gridheight=1;
         constraints.gridwidth=3;
         constraints.weightx=0.0;
@@ -192,12 +196,12 @@ public class ConfigurationDialog  extends JDialog {
         contentPane.add(this.checkConnectionCheckBox, constraints);
 
         /*Test result label*/
-        constraints.gridy=7;
+        constraints.gridy=8;
         constraints.insets= new Insets(5,15,5,10);
         contentPane.add(this.testServerLabel, constraints);
 
         /* Save Button*/
-        constraints.gridy=8;
+        constraints.gridy=9;
         constraints.insets= new Insets(5,10,10,10);
         contentPane.add(this.saveConfigButton, constraints);
     }
@@ -290,7 +294,8 @@ public class ConfigurationDialog  extends JDialog {
             String configurationName = this.configurationNameTextField.getText();
             String serverHost = this.serverIpTextField.getText();
             String serverPort = this.serverPortTextField.getText();
-            this.temporalConfig = new CaptureConfiguration(configurationName, serverHost, serverPort);
+            String outputFormat = (String) this.formatComboBox.getSelectedItem();
+            this.temporalConfig = new CaptureConfiguration(configurationName, serverHost, serverPort, outputFormat);
             this.accepted = true;
             this.setVisible(false);
             this.dispose();

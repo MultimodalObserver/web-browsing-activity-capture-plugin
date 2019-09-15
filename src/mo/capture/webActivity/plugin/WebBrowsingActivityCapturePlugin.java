@@ -83,7 +83,8 @@ public class WebBrowsingActivityCapturePlugin implements CaptureProvider{
         for (XElement pathX : pathsX) {
             String path = pathX.getString();
             File archive = new File(file.getParentFile(), path);
-            Configuration config = new WebBrowsingActivityConfiguration(archive);
+            Configuration config = new WebBrowsingActivityConfiguration();
+            config = config.fromFile(archive);
             webBrowsingActivityCapturePlugin.configurations.add(config);
         }
         return webBrowsingActivityCapturePlugin;

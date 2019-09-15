@@ -197,12 +197,13 @@ public class Router implements HttpHandler {
                 Field handledDataTypeField = handlerClass.getSuperclass().getDeclaredField("handledDataType");
                 String handledDataType = String.valueOf(handledDataTypeField.get(instance));
                 Method method = handlerClass.getMethod(handlerClassMethodName, HttpExchange.class, FileOutputStream.class,
-                        long.class);
+                        long.class, String.class);
                 FileOutputStream fileOutputStream = ServerController.getInstance().createOrGetOutputFile(handledDataType);
                 long now = DateHelper.nowMilliseconds();
                 long resumedCaptureTime = this.pauseTime + (now - this.resumeTime);
                 long captureMilliseconds = this.resumeTime == 0 ? now : resumedCaptureTime;
-                method.invoke(instance,exchange, fileOutputStream, captureMilliseconds);
+                String outputFormat = ServerController.getInstance().getRecorder().getWebBrowsingActivityConfiguration().getTemporalConfig().getOutputFormat();
+                method.invoke(instance,exchange, fileOutputStream, captureMilliseconds, outputFormat);
             }
             else if(instance instanceof LifecycleEndpoint){
                 Method method = handlerClass.getMethod(handlerClassMethodName, HttpExchange.class);
