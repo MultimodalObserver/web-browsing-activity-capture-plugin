@@ -33,7 +33,6 @@ public class WebBrowsingActivityRecorder {
         this.webBrowsingActivityConfiguration = webBrowsingActivityConfiguration;
         this.dataListeners = new ArrayList<>();
         this.i18n = new I18n(WebBrowsingActivityRecorder.class);
-        //this.createOutputFile(stageFolder);
     }
 
     public void start(){
@@ -72,7 +71,6 @@ public class WebBrowsingActivityRecorder {
     }
 
     public void cancel(){
-        System.out.println("Voy a cancelar");
         ServerController.getInstance().stopServer(0, true);
     }
 

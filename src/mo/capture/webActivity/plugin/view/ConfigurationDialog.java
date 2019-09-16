@@ -2,6 +2,7 @@ package mo.capture.webActivity.plugin.view;
 
 import javax.swing.*;
 import mo.capture.webActivity.plugin.model.CaptureConfiguration;
+import mo.capture.webActivity.plugin.model.Format;
 import mo.capture.webActivity.server.controller.ServerController;
 import mo.core.I18n;
 import mo.core.ui.Utils;
@@ -83,8 +84,8 @@ public class ConfigurationDialog  extends JDialog {
 
         /*Output format combo box */
         this.formatComboBox = new JComboBox<>();
-        this.formatComboBox.addItem(ServerController.JSON_FORMAT);
-        this.formatComboBox.addItem(ServerController.CSV_FORMAT);
+        this.formatComboBox.addItem(Format.JSON.getValue());
+        this.formatComboBox.addItem(Format.CSV.getValue());
 
         /* Check connection CheckBox */
         this.checkConnectionCheckBox = new JCheckBox(this.i18n.s("checkConnectionCheckBoxText"));

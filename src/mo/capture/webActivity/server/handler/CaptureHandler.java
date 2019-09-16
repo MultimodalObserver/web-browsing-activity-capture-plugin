@@ -19,7 +19,6 @@ import java.util.stream.Stream;
 public abstract class CaptureHandler implements CaptureEndpoint {
 
     private static final String MESSAGE_CONTENT_KEY = "data";
-    public static final String COMMA_SEPARATOR = ",";
     private static final Gson gson = new Gson();
     public String handledDataType;
 
@@ -29,18 +28,22 @@ public abstract class CaptureHandler implements CaptureEndpoint {
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
         Stream bodyStream =  bufferedReader.lines();
         Object[] jsonArray = bodyStream.toArray();
-        boolean toCSV = outputFormat.equals(ServerController.CSV_FORMAT);
+        boolean toCSV = outputFormat.equals(Format.CSV.getValue());
         String elementSeparator = toCSV ? Separator.CSV_ROW_SEPARATOR.getValue() : Separator.JSON_SEPARATOR.getValue();
+        /* DEBERIA SER UNA SOLA ITERACION EN TEORIA
+        *
+        */
         for (Object line : jsonArray){
+            String data = String.valueOf(line);
+            CapturableAndConvertibleToCSV model = this.dataToModel(data, this.handledDataType, captureMilliseconds);
+            data = toCSV ? model.toCSV(Separator.CSV_COLUMN_SEPARATOR.getValue()) : gson.toJson(model);
             try {
-                String data = String.valueOf(line);
-                CapturableAndConvertibleToCSV model = this.dataToModel(data, this.handledDataType, captureMilliseconds);
-                data = toCSV ? model.toCSV(Separator.CSV_COLUMN_SEPARATOR.getValue()) : gson.toJson(model);
                 fileOutputStream.write((data + elementSeparator).getBytes());
-                MessageSender.sendMessage(MESSAGE_CONTENT_KEY, gson.toJson(model), this.handledDataType);
             } catch (IOException e) {
                 e.printStackTrace();
+                continue;
             }
+            MessageSender.sendMessage(MESSAGE_CONTENT_KEY, gson.toJson(model), this.handledDataType);
         }
     }
 

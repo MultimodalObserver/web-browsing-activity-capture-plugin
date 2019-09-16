@@ -12,7 +12,7 @@ public class MouseClick implements CapturableAndConvertibleToCSV {
     private Long yScreen;
     private Long xMovement;
     private Long yMovement;
-    private Integer which;
+    private Integer button;
     private Long captureMilliseconds;
 
     public MouseClick(){
@@ -112,7 +112,7 @@ public class MouseClick implements CapturableAndConvertibleToCSV {
         return this.browser + separator + this.pageUrl + separator + this.pageTitle + separator + this.xPage
                 + separator + this.yPage + separator + this.xClient + separator + this.yClient + separator +
                 this.xScreen + separator + this.yScreen + separator + this.xMovement + separator +
-                this.yMovement + separator + this.which + separator + this.captureMilliseconds;
+                this.yMovement + separator + this.button + separator + this.captureMilliseconds;
     }
 
     @Override
@@ -125,11 +125,11 @@ public class MouseClick implements CapturableAndConvertibleToCSV {
         this.captureMilliseconds = captureMilliseconds;
     }
 
-    public Integer getWhich() {
-        return which;
+    public Integer getButton() {
+        return button;
     }
 
-    public void setWhich(Integer which) {
-        this.which = which;
+    public void setButton(Integer button) {
+        this.button = button;
     }
 }

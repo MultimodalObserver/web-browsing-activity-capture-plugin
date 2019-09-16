@@ -1,10 +1,10 @@
 package mo.capture.webActivity.server.controller;
 
 import com.google.gson.Gson;
+import mo.capture.webActivity.plugin.model.CSVHeader;
+import mo.capture.webActivity.plugin.model.Format;
 import mo.capture.webActivity.plugin.model.Separator;
-import mo.capture.webActivity.server.handler.CaptureHandler;
 import mo.communication.streaming.capture.PluginCaptureListener;
-import mo.capture.webActivity.plugin.WebBrowsingActivityConfiguration;
 import mo.capture.webActivity.plugin.WebBrowsingActivityRecorder;
 import mo.capture.webActivity.server.middleware.Cors;
 import mo.capture.webActivity.server.router.Router;
@@ -27,8 +27,6 @@ public class ServerController {
 
     private static ServerController instance = null;
 
-    public static final String CSV_FORMAT = "csv";
-    public static final String JSON_FORMAT = "json";
     private static final String INIT_JSON_ARRAY = "[";
     private static final String END_JSON_ARRAY = "]";
 
@@ -43,14 +41,10 @@ public class ServerController {
     /*Para el manejo de almacenamiento de los datos capturados*/
     private List<File> reportFolders;
     private List<FileDescription> reportFoldersDescriptions;
-    private WebBrowsingActivityConfiguration configuration;
     private Map<String, Map<String, Object>> outputFilesMap;
-    private static final String OUTPUT_FILE_EXTENSION = ".json";
     private String reportDate;
-    private static final Class CREATOR_CLASS = WebBrowsingActivityRecorder.class;
-    public static final String OUTPUT_FILE_KEY = "outputFile";
-    public static final String OUTPUT_FILE_DESCRIPTION_KEY = "outputFileDescription";
-    public static final String FILE_OUTPUT_STREAM_KEY = "fileOutputStream";
+    private static final String OUTPUT_FILE_KEY = "outputFile";
+    private static final String FILE_OUTPUT_STREAM_KEY = "fileOutputStream";
     private static final String MAP_FILE_NAME = "web_activity";
 
     /*Para el manejo de la transmision de los datos capturados*/
@@ -128,13 +122,19 @@ public class ServerController {
         this.reportDate = reportDate;
     }
 
-    public FileOutputStream createOrGetOutputFile(String fileName) throws IOException {
-        if(this.outputFilesMap.containsKey(fileName)){
-            return (FileOutputStream) this.outputFilesMap.get(fileName).get(FILE_OUTPUT_STREAM_KEY);
+    /* HANDLED DATA TYPE ES UNA VARIABLE QUE IDENTIFICA UNICAMENTE EL TIPO DE DATO CAPTURADO
+
+    POR EJ: TECLAS --> KEYSTROKES
+            CLICKS DEL MOUSE --> MOUSECLICKS, ETC..
+
+      DICHA VARIABLE ES DEFINIDA EN CADA UNO DE LOS HANDLERS Y ES INDEPENDIENTE DE LA RUTA ASOCIADA A EL.
+     */
+    public FileOutputStream createOrGetOutputFile(String handledDataType, String outputFormat) throws IOException {
+        if(this.outputFilesMap.containsKey(handledDataType)){
+            return (FileOutputStream) this.outputFilesMap.get(handledDataType).get(FILE_OUTPUT_STREAM_KEY);
         }
         String realFileName = this.reportDate + "_" + this.recorder.getWebBrowsingActivityConfiguration().getId() + "_" +
-                fileName.replace("/", "")
-                + OUTPUT_FILE_EXTENSION;
+                handledDataType.replace("/", "") + "." + outputFormat;
         /* Creamos un subdirectorio de nombre report date*/
         String parentPath = this.recorder.getStageFolder().getAbsolutePath();
         /* Podemos tener varias de estas report folders a lo largo de la ejecucion del plugin, solo creamos una nueva
@@ -156,24 +156,29 @@ public class ServerController {
         File outputFile = new File(activeReportFolder, realFileName);
         outputFile.createNewFile();
         FileOutputStream fileOutputStream = new FileOutputStream(outputFile);
-        /* VER EL TEMA DE LA EXTENSION DEL OUTPUT FILE
-        *
-        *
-        *
-        * */
         String outputFileExtension = this.recorder.getWebBrowsingActivityConfiguration().getTemporalConfig().getOutputFormat();
-        if(outputFileExtension.equals(CSV_FORMAT)){
-            String firstLine = "JEADERs" + System.getProperty("line.separator");
+        if(outputFileExtension.equals(Format.CSV.getValue())){
+            String firstLine = this.getCsvHeaders(handledDataType, Separator.CSV_COLUMN_SEPARATOR.getValue()) + Separator.CSV_ROW_SEPARATOR.getValue();
             fileOutputStream.write(firstLine.getBytes());
         }
-        else if(outputFileExtension.equals(JSON_FORMAT)){
+        else if(outputFileExtension.equals(Format.JSON.getValue())){
             fileOutputStream.write(INIT_JSON_ARRAY.getBytes());
         }
         Map<String, Object> outputFileMap = new HashMap<>();
         outputFileMap.put(OUTPUT_FILE_KEY, outputFile);
         outputFileMap.put(FILE_OUTPUT_STREAM_KEY, fileOutputStream);
-        this.outputFilesMap.put(fileName, outputFileMap);
+        this.outputFilesMap.put(handledDataType, outputFileMap);
         return fileOutputStream;
+    }
+
+    private String getCsvHeaders(String handledDataType, String separator) {
+        String res = "";
+        String[] headers = CSVHeader.HEADERS.get(handledDataType);
+        for(int i = 0; i < headers.length; i++){
+            boolean lastHeader = i == headers.length - 1;
+            res = lastHeader ? res + headers[i] : res + headers[i] + separator;
+        }
+        return res;
     }
 
     private void deleteOutputFiles() {
@@ -223,7 +228,7 @@ public class ServerController {
             Map<String, Object> subMap = this.outputFilesMap.get(key);
             FileOutputStream outputStream = (FileOutputStream) subMap.get(FILE_OUTPUT_STREAM_KEY);
             File outputFile = (File) subMap.get(OUTPUT_FILE_KEY);
-            boolean csvFile = outputFile.getAbsolutePath().endsWith("." + CSV_FORMAT);
+            boolean csvFile = outputFile.getAbsolutePath().endsWith("." + Format.CSV.getValue());
             try {
                 outputStream.flush();
                 long channelSize = outputStream.getChannel().position();
@@ -243,7 +248,7 @@ public class ServerController {
 
 
     private void writeMapFile(){
-        String mapFileName = this.reportDate + "_" + MAP_FILE_NAME + OUTPUT_FILE_EXTENSION;
+        String mapFileName = this.reportDate + "_" + MAP_FILE_NAME + "." + Format.JSON.getValue();
         File mapFile = new File(this.recorder.getStageFolder(), mapFileName);
         FileOutputStream mapFileOutputStream = null;
         try {
@@ -325,10 +330,6 @@ public class ServerController {
 
     public WebBrowsingActivityRecorder getRecorder(){
         return this.recorder;
-    }
-
-    public String getConfigurationId(){
-        return this.configuration.getId();
     }
 
     public void setRecorder(WebBrowsingActivityRecorder recorder){
