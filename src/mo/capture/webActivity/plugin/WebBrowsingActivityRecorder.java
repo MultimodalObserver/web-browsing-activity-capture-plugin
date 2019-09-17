@@ -95,19 +95,8 @@ public class WebBrowsingActivityRecorder {
         return this.stageFolder;
     }
 
-    public ProjectOrganization getProjectOrganization() {
-        return this.projectOrganization;
-    }
-
-    public Participant getParticipant() {
-        return this.participant;
-    }
-
     public WebBrowsingActivityConfiguration getWebBrowsingActivityConfiguration() {
         return this.webBrowsingActivityConfiguration;
     }
 
-    public List<PluginCaptureListener> getDataListeners() {
-        return this.dataListeners;
-    }
 }

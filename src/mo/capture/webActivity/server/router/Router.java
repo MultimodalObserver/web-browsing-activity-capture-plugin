@@ -1,5 +1,6 @@
 package mo.capture.webActivity.server.router;
 
+import mo.capture.webActivity.plugin.model.OutputFile;
 import mo.capture.webActivity.server.handler.behavior.LifecycleEndpoint;
 import mo.capture.webActivity.server.controller.ServerController;
 import mo.capture.webActivity.server.handler.behavior.CaptureEndpoint;
@@ -8,7 +9,6 @@ import mo.capture.webActivity.util.DateHelper;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -196,14 +196,14 @@ public class Router implements HttpHandler {
             if(instance instanceof CaptureEndpoint){
                 Field handledDataTypeField = handlerClass.getSuperclass().getDeclaredField("handledDataType");
                 String handledDataType = String.valueOf(handledDataTypeField.get(instance));
-                Method method = handlerClass.getMethod(handlerClassMethodName, HttpExchange.class, FileOutputStream.class,
-                        long.class, String.class);
-                String outputFormat = ServerController.getInstance().getRecorder().getWebBrowsingActivityConfiguration().getTemporalConfig().getOutputFormat();
-                FileOutputStream fileOutputStream = ServerController.getInstance().createOrGetOutputFile(handledDataType, outputFormat);
+                Method method = handlerClass.getMethod(handlerClassMethodName, HttpExchange.class, OutputFile[].class, long.class);
+                boolean exportToCsv = ServerController.getInstance().getRecorder()
+                        .getWebBrowsingActivityConfiguration().getTemporalConfig().getExportToCsv();
+                OutputFile[] outputFiles = ServerController.getInstance().createOrGetOutputFile(handledDataType, exportToCsv);
                 long now = DateHelper.nowMilliseconds();
                 long resumedCaptureTime = this.pauseTime + (now - this.resumeTime);
                 long captureMilliseconds = this.resumeTime == 0 ? now : resumedCaptureTime;
-                method.invoke(instance,exchange, fileOutputStream, captureMilliseconds, outputFormat);
+                method.invoke(instance,exchange, outputFiles, captureMilliseconds);
             }
             else if(instance instanceof LifecycleEndpoint){
                 Method method = handlerClass.getMethod(handlerClassMethodName, HttpExchange.class);

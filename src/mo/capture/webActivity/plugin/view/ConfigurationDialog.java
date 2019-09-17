@@ -2,7 +2,6 @@ package mo.capture.webActivity.plugin.view;
 
 import javax.swing.*;
 import mo.capture.webActivity.plugin.model.CaptureConfiguration;
-import mo.capture.webActivity.plugin.model.Format;
 import mo.capture.webActivity.server.controller.ServerController;
 import mo.core.I18n;
 import mo.core.ui.Utils;
@@ -25,8 +24,7 @@ public class ConfigurationDialog  extends JDialog {
     private JLabel serverPortErrorLabel;
     private JCheckBox checkConnectionCheckBox;
     private JLabel testServerLabel;
-    private JLabel formatLabel;
-    private JComboBox<String> formatComboBox;
+    private JCheckBox exportToCsvCheckBox;
     private I18n i18n;
 
 
@@ -37,7 +35,6 @@ public class ConfigurationDialog  extends JDialog {
         this.i18n = new I18n(ConfigurationDialog.class);
         this.setTitle(this.i18n.s("configurationFrameTitleText"));
         this.initComponents();
-        //this.centerComponents();
         this.addComponents();
         this.addActionListeners();
     }
@@ -78,14 +75,8 @@ public class ConfigurationDialog  extends JDialog {
         this.serverPortErrorLabel.setVisible(false);
         this.serverPortErrorLabel.setForeground(Color.RED);
 
-
-        /*Output file format label*/
-        this.formatLabel = new JLabel(this.i18n.s("outputFormatLabelText"));
-
-        /*Output format combo box */
-        this.formatComboBox = new JComboBox<>();
-        this.formatComboBox.addItem(Format.JSON.getValue());
-        this.formatComboBox.addItem(Format.CSV.getValue());
+        /*Export to CSV CheckBox */
+        this.exportToCsvCheckBox = new JCheckBox(this.i18n.s("exportToCsvCheckBoxText"));
 
         /* Check connection CheckBox */
         this.checkConnectionCheckBox = new JCheckBox(this.i18n.s("checkConnectionCheckBoxText"));
@@ -169,31 +160,21 @@ public class ConfigurationDialog  extends JDialog {
         this.setConstraintsForRightSide(constraints, true);
         contentPane.add(this.serverPortErrorLabel,constraints);
 
-        /* Output Format Label*/
+        /* Export to CSv CheckBox*/
         constraints = new GridBagConstraints();
         constraints.gridx = 0;
         constraints.gridy = 6;
-        this.setConstraintsForLeftSide(constraints);
-        constraints.gridheight =1;
-        contentPane.add(this.formatLabel, constraints);
-
-        /* Output combo box*/
-        constraints = new GridBagConstraints();
-        constraints.gridx = 1;
-        constraints.gridy = 6;
-        this.setConstraintsForRightSide(constraints, false);
-        contentPane.add(this.formatComboBox, constraints);
-
-        /* Check connection Checkbox*/
-        constraints = new GridBagConstraints();
-        constraints.gridx=0;
-        constraints.gridy=7;
         constraints.gridheight=1;
         constraints.gridwidth=3;
         constraints.weightx=0.0;
         constraints.weighty=0.0;
         constraints.fill=GridBagConstraints.HORIZONTAL;
         constraints.insets = new Insets(0,5,0,10);
+        contentPane.add(this.exportToCsvCheckBox, constraints);
+
+        /* Check connection Checkbox*/
+        constraints.gridx=0;
+        constraints.gridy=7;
         contentPane.add(this.checkConnectionCheckBox, constraints);
 
         /*Test result label*/
@@ -240,36 +221,19 @@ public class ConfigurationDialog  extends JDialog {
             this.resetTestMessage();
             this.resetErrors();
             if(this.checkConnectionCheckBox.isSelected()){
-                //System.out.println("ME SELECCIONARON");
-                if(!this.validateData()){
-                    //System.out.println("NO PASE VALIDACION");
+                if(this.invalidData(true)){
                     this.checkConnectionCheckBox.setSelected(false);
                     return;
                 }
-                //System.out.println("PASE VALIDACION");
                 String serverHost = this.serverIpTextField.getText();
                 String serverPort = this.serverPortTextField.getText();
                 int serverStatus = ServerController.getInstance().startServer(serverHost, serverPort);
                 if(serverStatus == ServerController.CONNECTION_ESTABLISHED){
-                    //System.out.println("SERVIDOR INICIADO");
-                    /* Mensaje de confirmacion
-                    *
-                    * Levantar nuevo dialogo que liste todo el estado inicial del server
-                    *
-                    * /* Esto cambiarlo!!!
-                    *
-                    * se debe abrir el success luego de finalizar este dialog.
-                    *
-                    * PONER LABEL DE TEST DE RESULTADO DE CONEXION
-                    *
-                    * CAMBIAR LABEL POR DIALOG CORTITO. DA MAS INTERACCION!!!
-                    * */
                     this.testServerLabel.setText(this.i18n.s("successTestMessage"));
                     this.testServerLabel.setVisible(true);
                     ServerController.getInstance().stopTestServer();
                 }
                 else if(serverStatus == ServerController.UNKNOWN_HOST){
-                    //System.out.println("HOST DESCONOCIDO");
                     this.serverIpErrorLabel.setText(this.i18n.s("unknownHostErrorMessage"));
                     this.serverIpErrorLabel.setVisible(true);
                     this.checkConnectionCheckBox.setSelected(false);
@@ -280,7 +244,6 @@ public class ConfigurationDialog  extends JDialog {
                     this.checkConnectionCheckBox.setSelected(false);
                 }
                 else if(serverStatus == ServerController.PORT_NOT_AVAILABLE){
-                    //System.out.println("PUERTO NO DISPONIBLE");
                     this.serverPortErrorLabel.setText(this.i18n.s("portNotAvailableErrorMessage"));
                     this.serverPortErrorLabel.setVisible(true);
                     this.checkConnectionCheckBox.setSelected(false);
@@ -289,14 +252,14 @@ public class ConfigurationDialog  extends JDialog {
         });
         this.saveConfigButton.addActionListener(e -> {
             this.resetErrors();
-            if(!this.validateData()){
+            if(this.invalidData(false)){
              return;
             }
             String configurationName = this.configurationNameTextField.getText();
             String serverHost = this.serverIpTextField.getText();
             String serverPort = this.serverPortTextField.getText();
-            String outputFormat = (String) this.formatComboBox.getSelectedItem();
-            this.temporalConfig = new CaptureConfiguration(configurationName, serverHost, serverPort, outputFormat);
+            boolean exportToCsv = this.exportToCsvCheckBox.isSelected();
+            this.temporalConfig = new CaptureConfiguration(configurationName, serverHost, serverPort, exportToCsv);
             this.accepted = true;
             this.setVisible(false);
             this.dispose();
@@ -310,11 +273,6 @@ public class ConfigurationDialog  extends JDialog {
     public boolean isAccepted() {
         return accepted;
     }
-
-    public void setAccepted(boolean accepted){
-        this.accepted = accepted;
-    }
-
 
     private void resetTestMessage(){
         this.testServerLabel.setText("");
@@ -330,12 +288,13 @@ public class ConfigurationDialog  extends JDialog {
         this.serverPortErrorLabel.setVisible(false);
     }
 
-    private  boolean validateData(){
+    private boolean invalidData(boolean testConnection){
         String configurationName = this.configurationNameTextField.getText();
         String serverIp = this.serverIpTextField.getText();
         String serverPort = this.serverPortTextField.getText();
-        if(configurationName.isEmpty() || serverIp.isEmpty() || serverPort.isEmpty()){
-            if(configurationName.isEmpty()){
+        boolean consideringName = testConnection && configurationName.isEmpty();
+        if(consideringName || serverIp.isEmpty() || serverPort.isEmpty()){
+            if(consideringName){
                 this.configurationNameErrorLabel.setText(this.i18n.s("emptyConfigName"));
                 this.configurationNameErrorLabel.setVisible(true);
             }
@@ -347,9 +306,9 @@ public class ConfigurationDialog  extends JDialog {
                 this.serverPortErrorLabel.setText(this.i18n.s("emptyServerPort"));
                 this.serverPortErrorLabel.setVisible(true);
             }
-            return false;
+            return true;
         }
-        return true;
+        return false;
     }
 
 }

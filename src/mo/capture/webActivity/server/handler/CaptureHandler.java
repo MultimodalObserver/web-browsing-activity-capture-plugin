@@ -7,6 +7,7 @@ import mo.capture.webActivity.server.handler.behavior.CaptureEndpoint;
 import mo.capture.webActivity.util.MessageSender;
 
 import java.io.*;
+import java.util.List;
 import java.util.stream.Stream;
 
 /* Clase que implementa funcionalidades básicas para los demás handler, por medio de herencia, como lo son:
@@ -23,27 +24,36 @@ public abstract class CaptureHandler implements CaptureEndpoint {
     public String handledDataType;
 
 
-    void writeAndSendData(InputStream inputStream, FileOutputStream fileOutputStream, long captureMilliseconds,
-                          String outputFormat){
+    void writeAndSendData(InputStream inputStream, OutputFile[] outputFiles, long captureMilliseconds){
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
         Stream bodyStream =  bufferedReader.lines();
         Object[] jsonArray = bodyStream.toArray();
-        boolean toCSV = outputFormat.equals(Format.CSV.getValue());
-        String elementSeparator = toCSV ? Separator.CSV_ROW_SEPARATOR.getValue() : Separator.JSON_SEPARATOR.getValue();
         /* DEBERIA SER UNA SOLA ITERACION EN TEORIA
         *
+        *
+        * VER LA FORMA
         */
-        for (Object line : jsonArray){
-            String data = String.valueOf(line);
-            CapturableAndConvertibleToCSV model = this.dataToModel(data, this.handledDataType, captureMilliseconds);
-            data = toCSV ? model.toCSV(Separator.CSV_COLUMN_SEPARATOR.getValue()) : gson.toJson(model);
-            try {
-                fileOutputStream.write((data + elementSeparator).getBytes());
-            } catch (IOException e) {
-                e.printStackTrace();
+        for(OutputFile outputFile : outputFiles){
+            /* ESTO SE DEBE A QUE OUTPUT FILES ES UN ARREGLO Y ES RECORRIDO COMO SI FUERA UNA LISTA DINAMICA!!!*/
+            if(outputFile == null){
                 continue;
             }
-            MessageSender.sendMessage(MESSAGE_CONTENT_KEY, gson.toJson(model), this.handledDataType);
+            boolean toCSV = outputFile.getFormat().equals(Format.CSV.getValue());
+            String elementSeparator = toCSV ? Separator.CSV_ROW_SEPARATOR.getValue() : Separator.JSON_SEPARATOR.getValue();
+            for (Object line : jsonArray){
+                String data = String.valueOf(line);
+                CapturableAndConvertibleToCSV model = this.dataToModel(data, this.handledDataType, captureMilliseconds);
+                data = toCSV ? model.toCSV(Separator.CSV_COLUMN_SEPARATOR.getValue()) : gson.toJson(model);
+                try {
+                    outputFile.getOutputStream().write((data + elementSeparator).getBytes());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    continue;
+                }
+                if(outputFile.getFormat().equals(Format.JSON.getValue())){
+                    MessageSender.sendMessage(MESSAGE_CONTENT_KEY, gson.toJson(model), this.handledDataType);
+                }
+            }
         }
     }
 

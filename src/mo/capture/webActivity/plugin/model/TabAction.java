@@ -3,9 +3,10 @@ package mo.capture.webActivity.plugin.model;
 public class TabAction implements CapturableAndConvertibleToCSV {
 
     private String browser;
-    private String pageUrl;
-    private String pageTitle;
-    private String type;
+    private String tabUrl;
+    private String tabTitle;
+    private String actionType;
+    private Integer tabIndex;
     private Integer tabId;
     private Integer windowId;
     private Long captureMilliseconds;
@@ -16,7 +17,9 @@ public class TabAction implements CapturableAndConvertibleToCSV {
 
     @Override
     public String toCSV(String separator) {
-        return this.type + separator + this.tabId + separator + this.windowId + separator + captureMilliseconds;
+        return this.browser + separator + this.tabUrl + separator + this.tabTitle + separator +
+                this.actionType + separator + this.tabIndex + separator +
+                this.tabId + separator + this.windowId + separator + captureMilliseconds;
     }
 
 
@@ -28,28 +31,28 @@ public class TabAction implements CapturableAndConvertibleToCSV {
         this.browser = browser;
     }
 
-    public String getPageUrl() {
-        return pageUrl;
+    public String getTabUrl() {
+        return tabUrl;
     }
 
-    public void setPageUrl(String pageUrl) {
-        this.pageUrl = pageUrl;
+    public void setTabUrl(String tabUrl) {
+        this.tabUrl = tabUrl;
     }
 
-    public String getPageTitle() {
-        return pageTitle;
+    public String getTabTitle() {
+        return tabTitle;
     }
 
-    public void setPageTitle(String pageTitle) {
-        this.pageTitle = pageTitle;
+    public void setTabTitle(String tabTitle) {
+        this.tabTitle = tabTitle;
     }
 
-    public String getType() {
-        return type;
+    public String getActionType() {
+        return actionType;
     }
 
-    public void setType(String type) {
-        this.type = type;
+    public void setActionType(String actionType) {
+        this.actionType = actionType;
     }
 
     public Integer getTabId() {
@@ -76,5 +79,13 @@ public class TabAction implements CapturableAndConvertibleToCSV {
     @Override
     public void setCaptureMilliseconds(Long captureMilliseconds) {
         this.captureMilliseconds = captureMilliseconds;
+    }
+
+    public Integer getTabIndex() {
+        return tabIndex;
+    }
+
+    public void setTabIndex(Integer tabIndex) {
+        this.tabIndex = tabIndex;
     }
 }

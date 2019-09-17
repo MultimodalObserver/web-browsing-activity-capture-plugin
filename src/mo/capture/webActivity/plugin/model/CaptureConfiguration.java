@@ -8,19 +8,18 @@ public class CaptureConfiguration {
     private String name;
     private String serverIp;
     private String serverPort;
-    private String outputFormat;
+    private Boolean exportToCsv;
 
     public CaptureConfiguration(){
 
     }
 
-    public CaptureConfiguration(String name, String serverIp, String serverPort, String outputFormat) {
+    public CaptureConfiguration(String name, String serverIp, String serverPort, Boolean exportToCsv) {
         this.name = name;
         this.serverIp = serverIp;
         this.serverPort = serverPort;
-        this.outputFormat = outputFormat;
+        this.exportToCsv = exportToCsv;
     }
-
 
     public String getName() {
         return name;
@@ -46,11 +45,11 @@ public class CaptureConfiguration {
         this.serverPort = serverPort;
     }
 
-    public String getOutputFormat() {
-        return outputFormat;
+    public Boolean getExportToCsv() {
+        return exportToCsv;
     }
 
-    public void setOutputFormat(String outputFormat) {
-        this.outputFormat = outputFormat;
+    public void setExportToCsv(Boolean exportToCsv) {
+        this.exportToCsv = exportToCsv;
     }
 }

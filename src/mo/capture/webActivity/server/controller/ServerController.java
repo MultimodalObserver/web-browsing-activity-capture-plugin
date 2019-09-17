@@ -3,6 +3,7 @@ package mo.capture.webActivity.server.controller;
 import com.google.gson.Gson;
 import mo.capture.webActivity.plugin.model.CSVHeader;
 import mo.capture.webActivity.plugin.model.Format;
+import mo.capture.webActivity.plugin.model.OutputFile;
 import mo.capture.webActivity.plugin.model.Separator;
 import mo.communication.streaming.capture.PluginCaptureListener;
 import mo.capture.webActivity.plugin.WebBrowsingActivityRecorder;
@@ -41,7 +42,7 @@ public class ServerController {
     /*Para el manejo de almacenamiento de los datos capturados*/
     private List<File> reportFolders;
     private List<FileDescription> reportFoldersDescriptions;
-    private Map<String, Map<String, Object>> outputFilesMap;
+    private Map<String, OutputFile[]> dataTypesOutputsMap;
     private String reportDate;
     private static final String OUTPUT_FILE_KEY = "outputFile";
     private static final String FILE_OUTPUT_STREAM_KEY = "fileOutputStream";
@@ -57,7 +58,7 @@ public class ServerController {
         router = null;
         server = null;
         this.inetSocketAddress = null;
-        this.outputFilesMap = new HashMap<>();
+        this.dataTypesOutputsMap = new HashMap<>();
         this.reportDate = null;
         this.reportFolders = new ArrayList<>();
         this.reportFoldersDescriptions = new ArrayList<>();
@@ -79,18 +80,18 @@ public class ServerController {
         try {
             address = InetAddress.getByName(serverIP);
         } catch (UnknownHostException e) {
-            //LOGGER.log(Level.SEVERE, null, e);
+            LOGGER.log(Level.SEVERE, null, e);
             return UNKNOWN_HOST;
         }
         try {
             this.inetSocketAddress = new InetSocketAddress(address, Integer.parseInt(serverPort));
             server = HttpServer.create(this.inetSocketAddress, 0);
         } catch (IOException e) {
-            //LOGGER.log(Level.SEVERE, null, e);
+            LOGGER.log(Level.SEVERE, null, e);
             return PORT_NOT_AVAILABLE;
         }
         catch(NumberFormatException e){
-            //LOGGER.log(Level.SEVERE, null, e);
+            LOGGER.log(Level.SEVERE, null, e);
             return INVALID_PORT;
         }
         router = new Router(this);
@@ -129,12 +130,14 @@ public class ServerController {
 
       DICHA VARIABLE ES DEFINIDA EN CADA UNO DE LOS HANDLERS Y ES INDEPENDIENTE DE LA RUTA ASOCIADA A EL.
      */
-    public FileOutputStream createOrGetOutputFile(String handledDataType, String outputFormat) throws IOException {
-        if(this.outputFilesMap.containsKey(handledDataType)){
-            return (FileOutputStream) this.outputFilesMap.get(handledDataType).get(FILE_OUTPUT_STREAM_KEY);
+    public OutputFile[] createOrGetOutputFile(String handledDataType, boolean exportToCsv) throws IOException {
+        if(this.dataTypesOutputsMap.containsKey(handledDataType)){
+            return this.dataTypesOutputsMap.get(handledDataType);
         }
-        String realFileName = this.reportDate + "_" + this.recorder.getWebBrowsingActivityConfiguration().getId() + "_" +
-                handledDataType.replace("/", "") + "." + outputFormat;
+
+        String baseFileName = this.reportDate + "_" + this.recorder.getWebBrowsingActivityConfiguration().getId() + "_" +
+                handledDataType.replace("/", "");
+
         /* Creamos un subdirectorio de nombre report date*/
         String parentPath = this.recorder.getStageFolder().getAbsolutePath();
         /* Podemos tener varias de estas report folders a lo largo de la ejecucion del plugin, solo creamos una nueva
@@ -144,7 +147,7 @@ public class ServerController {
         Si no, se trae el ultimo report folder de la lista, que representa el report folder de la captura actual
          */
         File activeReportFolder;
-        if(this.outputFilesMap.isEmpty()){
+        if(this.dataTypesOutputsMap.isEmpty()){
             activeReportFolder = new File(parentPath + System.getProperty("file.separator") + reportDate +
                     "_" + MAP_FILE_NAME);
             activeReportFolder.mkdir();
@@ -153,22 +156,36 @@ public class ServerController {
         else{
             activeReportFolder = this.reportFolders.get(this.reportFolders.size()- 1);
         }
-        File outputFile = new File(activeReportFolder, realFileName);
-        outputFile.createNewFile();
-        FileOutputStream fileOutputStream = new FileOutputStream(outputFile);
-        String outputFileExtension = this.recorder.getWebBrowsingActivityConfiguration().getTemporalConfig().getOutputFormat();
-        if(outputFileExtension.equals(Format.CSV.getValue())){
-            String firstLine = this.getCsvHeaders(handledDataType, Separator.CSV_COLUMN_SEPARATOR.getValue()) + Separator.CSV_ROW_SEPARATOR.getValue();
-            fileOutputStream.write(firstLine.getBytes());
+
+        /* Creamos los archivos y los asociamos al mapa
+        *
+        * Si o si se debe crear el json
+        *
+        * EL csv es opcional en caso de que se haya seleccionado la opcion de exportar a CSV
+        *
+        * */
+        OutputFile[] outputFiles = new OutputFile[2];
+        File jsonFile = new File(activeReportFolder, baseFileName + "." + Format.JSON.getValue());
+        FileOutputStream jsonOutputStream = new FileOutputStream(jsonFile);
+        jsonOutputStream.write(INIT_JSON_ARRAY.getBytes());
+        OutputFile jsonOutputFile = new OutputFile();
+        jsonOutputFile.setFormat(Format.JSON.getValue());
+        jsonOutputFile.setOutputStream(jsonOutputStream);
+        jsonOutputFile.setFile(jsonFile);
+        outputFiles[0] = jsonOutputFile;
+        if(exportToCsv){
+            File csvFile = new File(activeReportFolder, baseFileName + "." + Format.CSV.getValue());
+            FileOutputStream csvOutputStream = new FileOutputStream(csvFile);
+            String headers = this.getCsvHeaders(handledDataType, Separator.CSV_COLUMN_SEPARATOR.getValue()) + Separator.CSV_ROW_SEPARATOR.getValue();
+            csvOutputStream.write(headers.getBytes());
+            OutputFile csvOutputFile = new OutputFile();
+            csvOutputFile.setFormat(Format.CSV.getValue());
+            csvOutputFile.setOutputStream(csvOutputStream);
+            csvOutputFile.setFile(csvFile);
+            outputFiles[1] = csvOutputFile;
         }
-        else if(outputFileExtension.equals(Format.JSON.getValue())){
-            fileOutputStream.write(INIT_JSON_ARRAY.getBytes());
-        }
-        Map<String, Object> outputFileMap = new HashMap<>();
-        outputFileMap.put(OUTPUT_FILE_KEY, outputFile);
-        outputFileMap.put(FILE_OUTPUT_STREAM_KEY, fileOutputStream);
-        this.outputFilesMap.put(handledDataType, outputFileMap);
-        return fileOutputStream;
+        this.dataTypesOutputsMap.put(handledDataType, outputFiles);
+        return outputFiles;
     }
 
     private String getCsvHeaders(String handledDataType, String separator) {
@@ -185,23 +202,23 @@ public class ServerController {
         /* EL OUTPUFILESMAP SIEMPRE HACE REFERENCIA A LOS ARCHIVOS QUE VAN DENTRO DE LA CARPETA DE LA CAPTURA ACTUAL
         EJECUTANDOSE, LA QUE NO SE HA DETENIDO NI CANCELADO!!
          */
-        for (Object key : this.outputFilesMap.keySet()) {
-            Map<String, Object> subMap = this.outputFilesMap.get(key);
-            File outputFile = (File) subMap.get(OUTPUT_FILE_KEY);
-            if (!outputFile.isFile()) {
-                continue;
+       for (Object key : this.dataTypesOutputsMap.keySet()) {
+            OutputFile[] outputFiles = this.dataTypesOutputsMap.get(key);
+            for(OutputFile outputFile : outputFiles){
+                if(outputFile == null){
+                    continue;
+                }
+                try {
+                    outputFile.getOutputStream().flush();
+                    outputFile.getOutputStream().close();
+                } catch (IOException e) {
+                    LOGGER.log(Level.SEVERE, null, e);
+                    continue;
+                }
+                outputFile.getFile().delete();
             }
-            FileOutputStream outputStream = (FileOutputStream) subMap.get(FILE_OUTPUT_STREAM_KEY);
-            try {
-                outputStream.flush();
-                outputStream.close();
-            } catch (IOException e) {
-                LOGGER.log(Level.SEVERE, null, e);
-                continue;
-            }
-            outputFile.delete();
         }
-        this.outputFilesMap.clear();
+        this.dataTypesOutputsMap.clear();
 
         /* Esta parte elimina todos los archivos asociados a todos los report folders empleados durante la captura
 
@@ -224,24 +241,27 @@ public class ServerController {
     }
 
     private void closeFileOutputStreams(){
-        for (Object key : this.outputFilesMap.keySet()) {
-            Map<String, Object> subMap = this.outputFilesMap.get(key);
-            FileOutputStream outputStream = (FileOutputStream) subMap.get(FILE_OUTPUT_STREAM_KEY);
-            File outputFile = (File) subMap.get(OUTPUT_FILE_KEY);
-            boolean csvFile = outputFile.getAbsolutePath().endsWith("." + Format.CSV.getValue());
-            try {
-                outputStream.flush();
-                long channelSize = outputStream.getChannel().position();
-                String lastChar = csvFile ? Separator.CSV_ROW_SEPARATOR.getValue() : Separator.JSON_SEPARATOR.getValue();
-                long sizeWithoutLastChar = channelSize - lastChar.getBytes().length;
-                outputStream.getChannel().truncate(sizeWithoutLastChar);
-                if(!csvFile){
-                    outputStream.write(END_JSON_ARRAY.getBytes());
+        for (Object key : this.dataTypesOutputsMap.keySet()) {
+            OutputFile[] outputFiles = this.dataTypesOutputsMap.get(key);
+            for(OutputFile outputFile : outputFiles){
+                if(outputFile == null){
+                    continue;
                 }
-                outputStream.flush();
-                outputStream.close();
-            } catch (IOException e) {
-                LOGGER.log(Level.SEVERE, null, e);
+                boolean isCsvFile = outputFile.getFormat().equals(Format.CSV.getValue());
+                try {
+                    outputFile.getOutputStream().flush();
+                    long channelSize = outputFile.getOutputStream().getChannel().position();
+                    String lastChar = isCsvFile ? Separator.CSV_ROW_SEPARATOR.getValue() : Separator.JSON_SEPARATOR.getValue();
+                    long sizeWithoutLastChar = channelSize - lastChar.getBytes().length;
+                    outputFile.getOutputStream().getChannel().truncate(sizeWithoutLastChar);
+                    if(!isCsvFile){
+                        outputFile.getOutputStream().write(END_JSON_ARRAY.getBytes());
+                    }
+                    outputFile.getOutputStream().flush();
+                    outputFile.getOutputStream().close();
+                } catch (IOException e) {
+                    LOGGER.log(Level.SEVERE, null, e);
+                }
             }
         }
     }
@@ -258,11 +278,15 @@ public class ServerController {
             return;
         }
         Map <String, String> map = new HashMap<>();
-        for (Object key : this.outputFilesMap.keySet()){
+        for (Object key : this.dataTypesOutputsMap.keySet()){
             String auxKey = (String) key;
-            Map<String, Object> subMap = this.outputFilesMap.get(key);
-            File outputFile = (File) subMap.get(OUTPUT_FILE_KEY);
-            map.put( auxKey.replace("/", ""), outputFile.getAbsolutePath());
+            /* SOLO JSON*/
+            OutputFile[] outputFiles = this.dataTypesOutputsMap.get(key);
+            for(OutputFile outputFile : outputFiles){
+                if(outputFile != null && outputFile.getFormat().equals(Format.JSON.getValue())){
+                    map.put( auxKey.replace("/", ""), outputFile.getFile().getAbsolutePath());
+                }
+            }
         }
         Gson gson = new Gson();
         String mapString = gson.toJson(map);
@@ -312,7 +336,7 @@ public class ServerController {
     public void stopCapture(){
         this.closeFileOutputStreams();
         this.writeMapFile();
-        this.outputFilesMap.clear();
+        this.dataTypesOutputsMap.clear();
         this.reportDate = null;
         this.router.setStatus(Router.MOUNTED_STATUS);
     }
