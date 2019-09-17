@@ -6,7 +6,7 @@ public class Keystroke implements CapturableAndConvertibleToCSV {
     private String pageUrl;
     private String pageTitle;
     private String keyValue;
-    private Long captureMilliseconds;
+    private Long captureTimestamp;
 
     public Keystroke(){
 
@@ -47,16 +47,16 @@ public class Keystroke implements CapturableAndConvertibleToCSV {
     @Override
     public String toCSV(String separator) {
         return this.browser + separator + this.pageUrl + separator + this.pageTitle + separator +
-                this.keyValue + separator + this.captureMilliseconds;
+                this.keyValue + separator + this.captureTimestamp;
     }
 
     @Override
-    public Long getCaptureMilliseconds() {
-        return captureMilliseconds;
+    public Long getCaptureTimestamp() {
+        return captureTimestamp;
     }
 
     @Override
-    public void setCaptureMilliseconds(Long captureMilliseconds) {
-        this.captureMilliseconds = captureMilliseconds;
+    public void setCaptureTimestamp(Long captureTimestamp) {
+        this.captureTimestamp = captureTimestamp;
     }
 }

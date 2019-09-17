@@ -11,8 +11,8 @@ public class MouseMovesHandler extends CaptureHandler{
         this.handledDataType = "mouseMoves";
     }
     @Override
-    public void store(HttpExchange exchange, OutputFile[] outputFiles, long captureMilliseconds) {
-        this.writeAndSendData(exchange.getRequestBody(), outputFiles, captureMilliseconds);
+    public void store(HttpExchange exchange, OutputFile[] outputFiles, long captureTimestamp) {
+        this.writeAndSendData(exchange.getRequestBody(), outputFiles, captureTimestamp);
         String response = "Mensaje recibido";
         Response.sendResponse(response,200, exchange);
     }

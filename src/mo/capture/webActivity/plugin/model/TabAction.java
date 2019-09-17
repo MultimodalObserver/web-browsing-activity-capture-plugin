@@ -9,7 +9,7 @@ public class TabAction implements CapturableAndConvertibleToCSV {
     private Integer tabIndex;
     private Integer tabId;
     private Integer windowId;
-    private Long captureMilliseconds;
+    private Long captureTimestamp;
 
     public TabAction(){
 
@@ -19,7 +19,7 @@ public class TabAction implements CapturableAndConvertibleToCSV {
     public String toCSV(String separator) {
         return this.browser + separator + this.tabUrl + separator + this.tabTitle + separator +
                 this.actionType + separator + this.tabIndex + separator +
-                this.tabId + separator + this.windowId + separator + captureMilliseconds;
+                this.tabId + separator + this.windowId + separator + captureTimestamp;
     }
 
 
@@ -72,13 +72,13 @@ public class TabAction implements CapturableAndConvertibleToCSV {
     }
 
     @Override
-    public Long getCaptureMilliseconds() {
-        return captureMilliseconds;
+    public Long getCaptureTimestamp() {
+        return captureTimestamp;
     }
 
     @Override
-    public void setCaptureMilliseconds(Long captureMilliseconds) {
-        this.captureMilliseconds = captureMilliseconds;
+    public void setCaptureTimestamp(Long captureTimestamp) {
+        this.captureTimestamp = captureTimestamp;
     }
 
     public Integer getTabIndex() {

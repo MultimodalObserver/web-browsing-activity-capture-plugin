@@ -13,7 +13,7 @@ public class MouseMove implements CapturableAndConvertibleToCSV {
     private Long yScreen;
     private Long xMovement;
     private Long yMovement;
-    private Long captureMilliseconds;
+    private Long captureTimestamp;
 
     public String getBrowser() {
         return browser;
@@ -108,16 +108,16 @@ public class MouseMove implements CapturableAndConvertibleToCSV {
         return this.browser + separator + this.pageUrl + separator + this.pageTitle + separator + this.xPage
                 + separator + this.yPage + separator + this.xClient + separator + this.yClient + separator +
                 this.xScreen + separator + this.yScreen + separator + this.xMovement + separator +
-                this.yMovement + separator + this.captureMilliseconds;
+                this.yMovement + separator + this.captureTimestamp;
     }
 
     @Override
-    public Long getCaptureMilliseconds() {
-        return captureMilliseconds;
+    public Long getCaptureTimestamp() {
+        return captureTimestamp;
     }
 
     @Override
-    public void setCaptureMilliseconds(Long captureMilliseconds) {
-        this.captureMilliseconds = captureMilliseconds;
+    public void setCaptureTimestamp(Long captureTimestamp) {
+        this.captureTimestamp = captureTimestamp;
     }
 }

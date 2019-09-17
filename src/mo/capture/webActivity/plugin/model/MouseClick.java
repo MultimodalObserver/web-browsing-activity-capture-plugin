@@ -10,13 +10,18 @@ public class MouseClick implements CapturableAndConvertibleToCSV {
     private Long yClient;
     private Long xScreen;
     private Long yScreen;
-    private Long xMovement;
-    private Long yMovement;
     private Integer button;
-    private Long captureMilliseconds;
+    private Long captureTimestamp;
 
     public MouseClick(){
 
+    }
+
+    @Override
+    public String toCSV(String separator) {
+        return this.browser + separator + this.pageUrl + separator + this.pageTitle + separator + this.xPage
+                + separator + this.yPage + separator + this.xClient + separator + this.yClient + separator +
+                this.xScreen + separator + this.yScreen + separator + this.button + separator + this.captureTimestamp;
     }
 
     public String getBrowser() {
@@ -91,45 +96,21 @@ public class MouseClick implements CapturableAndConvertibleToCSV {
         this.yScreen = yScreen;
     }
 
-    public Long getxMovement() {
-        return xMovement;
-    }
-
-    public void setxMovement(Long xMovement) {
-        this.xMovement = xMovement;
-    }
-
-    public Long getyMovement() {
-        return yMovement;
-    }
-
-    public void setyMovement(Long yMovement) {
-        this.yMovement = yMovement;
-    }
-
-    @Override
-    public String toCSV(String separator) {
-        return this.browser + separator + this.pageUrl + separator + this.pageTitle + separator + this.xPage
-                + separator + this.yPage + separator + this.xClient + separator + this.yClient + separator +
-                this.xScreen + separator + this.yScreen + separator + this.xMovement + separator +
-                this.yMovement + separator + this.button + separator + this.captureMilliseconds;
-    }
-
-    @Override
-    public Long getCaptureMilliseconds() {
-        return captureMilliseconds;
-    }
-
-    @Override
-    public void setCaptureMilliseconds(Long captureMilliseconds) {
-        this.captureMilliseconds = captureMilliseconds;
-    }
-
     public Integer getButton() {
         return button;
     }
 
     public void setButton(Integer button) {
         this.button = button;
+    }
+
+    @Override
+    public Long getCaptureTimestamp() {
+        return captureTimestamp;
+    }
+
+    @Override
+    public void setCaptureTimestamp(Long captureTimestamp) {
+        this.captureTimestamp = captureTimestamp;
     }
 }

@@ -5,12 +5,12 @@ public class SearchAction implements CapturableAndConvertibleToCSV {
     private String pageUrl;
     private String pageTitle;
     private String search;
-    private Long captureMilliseconds;
+    private Long captureTimestamp;
 
     @Override
     public String toCSV(String separator) {
         return this.browser + separator + this.pageUrl + separator + this.pageTitle + separator +
-                this.search + separator + this.captureMilliseconds;
+                this.search + separator + this.captureTimestamp;
     }
 
     public String getBrowser() {
@@ -46,12 +46,12 @@ public class SearchAction implements CapturableAndConvertibleToCSV {
     }
 
     @Override
-    public Long getCaptureMilliseconds() {
-        return captureMilliseconds;
+    public Long getCaptureTimestamp() {
+        return captureTimestamp;
     }
 
     @Override
-    public void setCaptureMilliseconds(Long captureMilliseconds) {
-        this.captureMilliseconds = captureMilliseconds;
+    public void setCaptureTimestamp(Long captureTimestamp) {
+        this.captureTimestamp = captureTimestamp;
     }
 }

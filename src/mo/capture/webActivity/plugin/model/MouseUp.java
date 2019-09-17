@@ -6,7 +6,7 @@ public class MouseUp implements CapturableAndConvertibleToCSV {
     private String pageUrl;
     private String pageTitle;
     private String selectedText;
-    private Long captureMilliseconds;
+    private Long captureTimestamp;
 
     public String getBrowser() {
         return browser;
@@ -43,16 +43,16 @@ public class MouseUp implements CapturableAndConvertibleToCSV {
     @Override
     public String toCSV(String separator) {
         return this.browser + separator + this.pageUrl + separator + this.pageTitle + separator + selectedText + separator
-                + this.captureMilliseconds;
+                + this.captureTimestamp;
     }
 
     @Override
-    public Long getCaptureMilliseconds() {
-        return captureMilliseconds;
+    public Long getCaptureTimestamp() {
+        return captureTimestamp;
     }
 
     @Override
-    public void setCaptureMilliseconds(Long captureMilliseconds) {
-        this.captureMilliseconds = captureMilliseconds;
+    public void setCaptureTimestamp(Long captureTimestamp) {
+        this.captureTimestamp = captureTimestamp;
     }
 }

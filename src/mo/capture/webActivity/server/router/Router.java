@@ -202,8 +202,8 @@ public class Router implements HttpHandler {
                 OutputFile[] outputFiles = ServerController.getInstance().createOrGetOutputFile(handledDataType, exportToCsv);
                 long now = DateHelper.nowMilliseconds();
                 long resumedCaptureTime = this.pauseTime + (now - this.resumeTime);
-                long captureMilliseconds = this.resumeTime == 0 ? now : resumedCaptureTime;
-                method.invoke(instance,exchange, outputFiles, captureMilliseconds);
+                long captureTimestamp = this.resumeTime == 0 ? now : resumedCaptureTime;
+                method.invoke(instance,exchange, outputFiles, captureTimestamp);
             }
             else if(instance instanceof LifecycleEndpoint){
                 Method method = handlerClass.getMethod(handlerClassMethodName, HttpExchange.class);

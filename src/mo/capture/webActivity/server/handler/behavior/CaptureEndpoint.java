@@ -10,5 +10,5 @@ import java.util.List;
 
 public interface CaptureEndpoint {
 
-    void store(HttpExchange exchange, OutputFile[] outputFiles, long captureMilliseconds);
+    void store(HttpExchange exchange, OutputFile[] outputFiles, long captureTimestamp);
 }

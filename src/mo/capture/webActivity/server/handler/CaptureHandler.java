@@ -2,12 +2,10 @@ package mo.capture.webActivity.server.handler;
 
 import com.google.gson.Gson;
 import mo.capture.webActivity.plugin.model.*;
-import mo.capture.webActivity.server.controller.ServerController;
 import mo.capture.webActivity.server.handler.behavior.CaptureEndpoint;
 import mo.capture.webActivity.util.MessageSender;
 
 import java.io.*;
-import java.util.List;
 import java.util.stream.Stream;
 
 /* Clase que implementa funcionalidades básicas para los demás handler, por medio de herencia, como lo son:
@@ -24,7 +22,7 @@ public abstract class CaptureHandler implements CaptureEndpoint {
     public String handledDataType;
 
 
-    void writeAndSendData(InputStream inputStream, OutputFile[] outputFiles, long captureMilliseconds){
+    void writeAndSendData(InputStream inputStream, OutputFile[] outputFiles, long captureTimestamp){
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
         Stream bodyStream =  bufferedReader.lines();
         Object[] jsonArray = bodyStream.toArray();
@@ -42,7 +40,7 @@ public abstract class CaptureHandler implements CaptureEndpoint {
             String elementSeparator = toCSV ? Separator.CSV_ROW_SEPARATOR.getValue() : Separator.JSON_SEPARATOR.getValue();
             for (Object line : jsonArray){
                 String data = String.valueOf(line);
-                CapturableAndConvertibleToCSV model = this.dataToModel(data, this.handledDataType, captureMilliseconds);
+                CapturableAndConvertibleToCSV model = this.dataToModel(data, this.handledDataType, captureTimestamp);
                 data = toCSV ? model.toCSV(Separator.CSV_COLUMN_SEPARATOR.getValue()) : gson.toJson(model);
                 try {
                     outputFile.getOutputStream().write((data + elementSeparator).getBytes());
@@ -57,7 +55,7 @@ public abstract class CaptureHandler implements CaptureEndpoint {
         }
     }
 
-    private CapturableAndConvertibleToCSV dataToModel(String data, String handledDataType, long captureMilliseconds){
+    private CapturableAndConvertibleToCSV dataToModel(String data, String handledDataType, long captureTimestamp){
         CapturableAndConvertibleToCSV model;
         switch(handledDataType){
             case "keystrokes":
@@ -82,7 +80,7 @@ public abstract class CaptureHandler implements CaptureEndpoint {
                 model = null;
         }
         if(model != null){
-            model.setCaptureMilliseconds(captureMilliseconds);
+            model.setCaptureTimestamp(captureTimestamp);
         }
         return model;
     }
