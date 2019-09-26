@@ -68,7 +68,7 @@ public class Router implements HttpHandler {
     private long pauseTime;
     private long resumeTime;
     private Map<String, Map<String, RouteHandlerInfo>> routes;
-    private int status;
+    private volatile int status;
 
     public Router(ServerController serverController){
         this.routes = new HashMap<>();

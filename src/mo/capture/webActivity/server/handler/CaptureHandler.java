@@ -49,7 +49,10 @@ public abstract class CaptureHandler implements CaptureEndpoint {
                     continue;
                 }
                 if(outputFile.getFormat().equals(Format.JSON.getValue())){
-                    MessageSender.sendMessage(MESSAGE_CONTENT_KEY, gson.toJson(model), this.handledDataType);
+                    DataMessage dataMessage = new DataMessage();
+                    dataMessage.setDataType(this.handledDataType);
+                    dataMessage.setData(gson.toJson(model));
+                    MessageSender.sendMessage(MESSAGE_CONTENT_KEY, gson.toJson(dataMessage));
                 }
             }
         }
