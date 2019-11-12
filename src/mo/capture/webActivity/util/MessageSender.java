@@ -12,14 +12,13 @@ import java.util.HashMap;
 
 public class MessageSender {
 
-    private static final Gson gson = new Gson();
     public static void sendMessage(String messageType, String messageData){
         ArrayList<RemoteClient> clients = ServerConnection.getInstance().getClients();
         if(clients == null || clients.size() == 0){
             return;
         }
         HashMap<String, Object> data = new HashMap<>();
-        data.put(messageType, gson.toJson(messageData));
+        data.put(messageType, messageData);
         PetitionResponse petitionResponse = new PetitionResponse(WebBrowsingActivityConfiguration.PLUGIN_MESSAGE_KEY, data);
         for(RemoteClient client : clients){
             client.send(petitionResponse);
